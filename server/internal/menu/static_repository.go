@@ -1,5 +1,7 @@
 package menu
 
+import "fmt"
+
 type StaticRepository struct {
 	catalog Catalog
 }
@@ -38,4 +40,20 @@ func NewStaticRepository() StaticRepository {
 
 func (r StaticRepository) Catalog() Catalog {
 	return r.catalog
+}
+
+func (r StaticRepository) UpsertCategory(Category) error {
+	return fmt.Errorf("static repository is read-only")
+}
+
+func (r StaticRepository) DeleteCategory(string) error {
+	return fmt.Errorf("static repository is read-only")
+}
+
+func (r StaticRepository) UpsertItem(Item) error {
+	return fmt.Errorf("static repository is read-only")
+}
+
+func (r StaticRepository) DeleteItem(string) error {
+	return fmt.Errorf("static repository is read-only")
 }

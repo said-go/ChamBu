@@ -37,3 +37,11 @@ type BrandInfo struct {
 type Repository interface {
 	Catalog() Catalog
 }
+
+type AdminRepository interface {
+	Repository
+	UpsertCategory(Category) error
+	DeleteCategory(id string) error
+	UpsertItem(Item) error
+	DeleteItem(id string) error
+}

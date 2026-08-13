@@ -10,6 +10,8 @@ type Config struct {
 	Port         string
 	ClientDir    string
 	AllowOrigin  string
+	DatabaseURL  string
+	AdminToken   string
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
 	IdleTimeout  time.Duration
@@ -21,6 +23,8 @@ func FromEnv() Config {
 		Port:         env("PORT", "8080"),
 		ClientDir:    env("CLIENT_DIR", "../client"),
 		AllowOrigin:  env("ALLOW_ORIGIN", "*"),
+		DatabaseURL:  env("DATABASE_URL", ""),
+		AdminToken:   env("ADMIN_TOKEN", "chambu-admin"),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  60 * time.Second,

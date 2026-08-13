@@ -10,7 +10,8 @@ import (
 )
 
 func TestMenuEndpoint(t *testing.T) {
-	router := NewRouter(Dependencies{Menu: menu.NewStaticRepository(), AllowOrigin: "*"})
+	repo := menu.NewStaticRepository()
+	router := NewRouter(Dependencies{Menu: repo, Admin: repo, AllowOrigin: "*", AdminToken: "secret"})
 
 	req := httptest.NewRequest(http.MethodGet, "/api/menu", nil)
 	rec := httptest.NewRecorder()
@@ -29,5 +30,18 @@ func TestMenuEndpoint(t *testing.T) {
 	}
 	if len(catalog.Categories) == 0 || len(catalog.Items) == 0 {
 		t.Fatal("expected menu categories and items")
+	}
+}
+
+func TestAdminRequiresToken(t *testing.T) {
+	repo := menu.NewStaticRepository()
+	router := NewRouter(Dependencies{Menu: repo, Admin: repo, AdminToken: "secret"})
+
+	req := httptest.NewRequest(http.MethodPost, "/api/admin/categories", nil)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected status 401, got %d", rec.Code)
 	}
 }

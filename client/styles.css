@@ -146,6 +146,28 @@ input {
   background: rgba(255, 250, 242, 0.1);
 }
 
+.admin-link {
+  min-height: 34px;
+  border: 1px solid rgba(255, 250, 242, 0.36);
+  border-radius: 8px;
+  padding: 0 12px;
+  color: inherit;
+  background: rgba(255, 250, 242, 0.12);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.notice {
+  width: min(1180px, calc(100% - 36px));
+  margin: 18px auto 0;
+  border: 1px solid rgba(185, 94, 53, 0.24);
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: #fff3e8;
+  color: #7b4229;
+  font-weight: 700;
+}
+
 .info-strip {
   display: flex;
   flex-wrap: wrap;
@@ -394,6 +416,171 @@ input {
   opacity: 0.55;
 }
 
+.admin-page {
+  min-height: 100vh;
+  padding: 20px clamp(14px, 4vw, 54px) 56px;
+  background:
+    linear-gradient(180deg, rgba(23, 72, 62, 0.08), transparent 280px),
+    var(--paper);
+}
+
+.admin-head,
+.admin-grid,
+.admin-list {
+  width: min(1120px, 100%);
+  margin-inline: auto;
+}
+
+.admin-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 0 24px;
+}
+
+.admin-head .admin-link {
+  color: var(--green);
+  border-color: var(--line);
+  background: #fff;
+}
+
+.admin-head h1,
+.admin-panel h2,
+.admin-list h2 {
+  margin: 0;
+  letter-spacing: 0;
+}
+
+.admin-head h1 {
+  font-size: clamp(30px, 8vw, 56px);
+  line-height: 0.95;
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 0.9fr;
+  gap: 14px;
+  align-items: start;
+}
+
+.admin-panel,
+.admin-row {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 10px 34px rgba(49, 35, 24, 0.07);
+}
+
+.admin-panel {
+  display: grid;
+  gap: 11px;
+  padding: 16px;
+}
+
+.admin-panel h2,
+.admin-list h2 {
+  font-size: 20px;
+}
+
+.admin-panel input,
+.admin-panel textarea,
+.admin-panel select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--ink);
+  background: #fff;
+  outline: none;
+}
+
+.admin-panel textarea {
+  min-height: 94px;
+  resize: vertical;
+}
+
+.admin-panel input:focus,
+.admin-panel textarea:focus,
+.admin-panel select:focus {
+  border-color: var(--leaf);
+  box-shadow: 0 0 0 4px rgba(47, 111, 93, 0.12);
+}
+
+.admin-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.checkline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.checkline input {
+  width: 18px;
+  min-height: 18px;
+}
+
+.admin-token p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.admin-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.admin-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 13px 14px;
+}
+
+.admin-row div {
+  min-width: 0;
+}
+
+.admin-row strong {
+  display: block;
+}
+
+.admin-row span {
+  display: block;
+  margin-top: 3px;
+  color: var(--leaf);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.admin-row p {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.42;
+}
+
+.danger-button {
+  min-height: 38px;
+  border: 1px solid rgba(185, 94, 53, 0.25);
+  border-radius: 8px;
+  padding: 0 12px;
+  color: #9e3d24;
+  background: #fff3e8;
+  font-weight: 800;
+  cursor: pointer;
+}
+
 @media (max-width: 860px) {
   .hero {
     min-height: 80vh;
@@ -436,6 +623,14 @@ input {
   .menu-list {
     grid-template-columns: 1fr;
   }
+
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-head {
+    align-items: flex-start;
+  }
 }
 
 @media (max-width: 520px) {
@@ -450,6 +645,8 @@ input {
   .menu-card {
     grid-template-columns: 74px 1fr;
     min-height: 172px;
+    padding: 12px;
+    gap: 12px;
   }
 
   .dish-art {
@@ -463,5 +660,48 @@ input {
 
   .cart-bar {
     bottom: 10px;
+  }
+
+  .hero__actions .button {
+    width: 100%;
+  }
+
+  .info-strip {
+    padding-top: 14px;
+  }
+
+  .info-strip span {
+    width: 100%;
+    border-radius: 8px;
+  }
+
+  .menu-sidebar h2 {
+    font-size: 28px;
+  }
+
+  .admin-page {
+    padding-inline: 14px;
+  }
+
+  .admin-head {
+    display: grid;
+  }
+
+  .admin-panel {
+    padding: 14px;
+  }
+
+  .admin-form-row,
+  .admin-row {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-row {
+    display: grid;
+    align-items: start;
+  }
+
+  .danger-button {
+    width: 100%;
   }
 }
