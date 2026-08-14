@@ -58,13 +58,7 @@ function bindAdminEvents() {
 
   document.querySelector('[data-item-form]')?.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const form = Object.fromEntries(new FormData(event.currentTarget));
-    await store.saveItem({
-      ...form,
-      price: Number(form.price),
-      badges: form.badges.split(',').map((badge) => badge.trim()).filter(Boolean),
-      available: form.available === 'on',
-    });
+    await store.saveItem(new FormData(event.currentTarget));
     event.currentTarget.reset();
   });
 

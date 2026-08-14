@@ -22,7 +22,7 @@ export function renderAdmin(state) {
           <button class="button button--primary" type="submit">Сохранить</button>
         </form>
 
-        <form class="admin-panel" data-item-form>
+        <form class="admin-panel" data-item-form enctype="multipart/form-data">
           <h2>Позиция</h2>
           <input name="id" placeholder="id: raf-cardamom" required />
           <select name="categoryId" required>
@@ -36,6 +36,10 @@ export function renderAdmin(state) {
           </div>
           <input name="badges" placeholder="Бейджи через запятую" />
           <input name="image" placeholder="Тема: coffee, dessert" value="coffee" />
+          <label class="fileline">
+            <span>Фото блюда</span>
+            <input name="imageFile" type="file" accept="image/*" />
+          </label>
           <label class="checkline">
             <input name="available" type="checkbox" checked />
             <span>Показывать гостям</span>

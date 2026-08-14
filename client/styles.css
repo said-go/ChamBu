@@ -521,6 +521,14 @@ input {
   font-weight: 800;
 }
 
+.fileline {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .checkline input {
   width: 18px;
   min-height: 18px;

@@ -11,14 +11,14 @@ values (
 )
 on conflict (id) do nothing;
 
-insert into menu_categories (id, name, description, sort_order) values
+insert into menu_categories (slug, name, description, sort_order) values
   ('coffee', 'Кофе', 'Классика, авторские напитки и мягкие молочные вкусы.', 10),
   ('tea', 'Чай и лимонады', 'Согревающие сборы, холодные напитки и домашние вкусы.', 20),
   ('breakfast', 'Завтраки', 'Сытные позиции для утра и позднего старта.', 30),
   ('desserts', 'Десерты', 'Нежные сладости к кофе и праздничному настроению.', 40)
-on conflict (id) do nothing;
+on conflict (slug) do nothing;
 
-insert into menu_items (id, category_id, name, description, price, weight, badges, image, available, sort_order) values
+insert into menu_items (slug, category_id, name, description, price, weight, badges, image, available, sort_order) values
   ('raf-cardamom', 'coffee', 'Раф кардамон', 'Сливочный кофе с тонкой пряной нотой и бархатной пеной.', 260, '300 мл', '["хит", "нежный"]', 'coffee', true, 10),
   ('latte-honey', 'coffee', 'Латте медовый', 'Эспрессо, молоко и мягкая сладость меда без лишней тяжести.', 240, '300 мл', '["мягкий"]', 'latte', true, 20),
   ('americano', 'coffee', 'Американо', 'Чистый вкус зерна, плотный аромат и аккуратная горчинка.', 160, '250 мл', '["классика"]', 'americano', true, 30),
@@ -29,4 +29,4 @@ insert into menu_items (id, category_id, name, description, price, weight, badge
   ('syrniki', 'breakfast', 'Сырники', 'Творожные сырники со сметаной и ягодным соусом.', 340, '240 г', '["сладкое"]', 'syrniki', true, 30),
   ('pistachio-roll', 'desserts', 'Фисташковый рулет', 'Воздушный бисквит, крем и фисташковая крошка.', 310, '140 г', '["новинка"]', 'dessert', true, 10),
   ('tiramisu', 'desserts', 'Тирамису', 'Кофейный десерт с маскарпоне и какао.', 320, '150 г', '["к кофе"]', 'tiramisu', true, 20)
-on conflict (id) do nothing;
+on conflict (slug) do nothing;

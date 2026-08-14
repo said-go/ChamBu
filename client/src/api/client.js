@@ -23,6 +23,14 @@ export class ApiClient {
   }
 
   async saveItem(token, item) {
+    if (item instanceof FormData) {
+      return this.request('/admin/items', {
+        method: 'POST',
+        token,
+        body: item,
+      });
+    }
+
     return this.request('/admin/items', {
       method: 'POST',
       token,
@@ -38,14 +46,15 @@ export class ApiClient {
   }
 
   async request(path, options = {}) {
+    const isFormData = options.body instanceof FormData;
     const headers = { Accept: 'application/json' };
-    if (options.body) headers['Content-Type'] = 'application/json';
+    if (options.body && !isFormData) headers['Content-Type'] = 'application/json';
     if (options.token) headers['X-Admin-Token'] = options.token;
 
     const response = await fetch(`${this.baseURL}${path}`, {
       method: options.method || 'GET',
       headers,
-      body: options.body ? JSON.stringify(options.body) : undefined,
+      body: isFormData ? options.body : options.body ? JSON.stringify(options.body) : undefined,
     });
 
     if (response.status === 204) return null;

@@ -5,27 +5,9 @@
 ## Структура
 
 - `client` - фронтенд на чистом JavaScript, HTML и CSS.
-- `server` - Go API и статическая раздача фронтенда.
+- `server` - Go API на Gin/Gorm с PostgreSQL, админкой, заказами и загрузкой изображений.
 
 ## Запуск
-
-```powershell
-cd server
-go run ./cmd/api
-```
-
-Откройте `http://localhost:8080`.
-
-## PostgreSQL
-
-Создайте базу и примените SQL из папки `server/migrations` по порядку:
-
-```powershell
-psql $env:DATABASE_URL -f migrations/001_init.sql
-psql $env:DATABASE_URL -f migrations/002_seed.sql
-```
-
-Запуск с PostgreSQL:
 
 ```powershell
 cd server
@@ -34,32 +16,75 @@ $env:ADMIN_TOKEN="strong-admin-token"
 go run ./cmd/api
 ```
 
-Если `DATABASE_URL` не задан, сервер запускается с read-only fallback-меню.
+Откройте `http://localhost:8080`.
+Админка доступна по `http://localhost:8080/#admin`.
+
+## PostgreSQL
+
+Бэкенд выполняет `AutoMigrate` при старте. SQL-миграции также лежат в `server/migrations` для ручного применения или будущего migration runner:
+
+```powershell
+psql $env:DATABASE_URL -f migrations/001_init.sql
+psql $env:DATABASE_URL -f migrations/002_seed.sql
+```
+
+Можно использовать либо `DATABASE_URL`, либо набор переменных:
+
+- `DB_HOST`
+- `DB_PORT`
+- `DB_USER`
+- `DB_PASS`
+- `DB_NAME`
+
+## Хранилище фото
+
+Позиции меню можно создавать через multipart form с полем `imageFile`. Перед отправкой в хранилище фото сжимается до JPEG шириной 800px и качеством 80.
+
+Переменные для Cloudinary:
+
+```powershell
+$env:STORAGE_DRIVER="cloudinary"
+$env:CLOUDINARY_CLOUD_NAME="..."
+$env:CLOUDINARY_API_KEY="..."
+$env:CLOUDINARY_API_SECRET="..."
+```
+
+Если Cloudinary не настроен, используется Yandex storage fallback из `internal/storage/yandex.go`.
 
 ## API
 
 - `GET /api/health` - проверка сервера.
 - `GET /api/menu` - бренд, категории и позиции меню.
+- `GET /api/menu/items` - список позиций с фильтрами `category`, `search`, `page`, `limit`.
 - `POST /api/admin/categories` - создать или обновить категорию.
-- `DELETE /api/admin/categories/{id}` - удалить категорию.
-- `POST /api/admin/items` - создать или обновить позицию.
-- `DELETE /api/admin/items/{id}` - удалить позицию.
+- `DELETE /api/admin/categories/{id}` - удалить категорию по slug.
+- `POST /api/admin/items` - создать или обновить позицию меню; поддерживает JSON и multipart form.
+- `PUT /api/admin/items/{id}` - обновить позицию по numeric ID.
+- `DELETE /api/admin/items/{id}` - удалить позицию по slug.
+- `POST /orders` - создать заказ.
+- `GET /orders` - список заказов для администратора.
 
-Админские запросы требуют заголовок `X-Admin-Token` со значением `ADMIN_TOKEN`.
+Админские запросы принимают `X-Admin-Token: <ADMIN_TOKEN>` или JWT из `Authorization: Bearer <token>` после `/auth/login`.
 
-## Архитектура
+Seed-администратор для локального старта:
 
-Бэкенд разделен на слои:
+- email: `admin@chambu.local`
+- password: `chambu-admin`
 
-- `cmd/api` - точка входа и сборка зависимостей.
-- `internal/config` - конфигурация окружения.
-- `internal/httpapi` - HTTP handlers, валидация и ответы API.
-- `internal/menu` - доменные модели и репозитории меню.
-- `internal/platform/postgres` - подключение к PostgreSQL.
+## Архитектура backend
 
-Фронтенд разделен на слои:
+- `cmd/api` - точка входа, сборка зависимостей, миграция и seed.
+- `internal/config` - конфигурация окружения и подключение PostgreSQL.
+- `internal/models` - Gorm-модели и DTO.
+- `internal/repository` - работа с БД.
+- `internal/service` - бизнес-логика меню, заказов, администраторов и auth.
+- `internal/transport` - Gin handlers, роуты и admin auth middleware.
+- `internal/storage` - Cloudinary/Yandex storage и сжатие изображений.
+- `internal/utils` - JWT.
+
+## Архитектура frontend
 
 - `src/api` - HTTP-клиент.
 - `src/state` - состояние приложения и сценарии.
 - `src/views` - рендер меню и админки.
-- `src/utils` - форматирование и мелкие общие функции.
+- `src/utils` - форматирование и общие функции.
