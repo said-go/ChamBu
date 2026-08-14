@@ -2,7 +2,7 @@ insert into brand_settings (id, name, subtitle, description, phone, address, hou
 values (
   1,
   'ЧамБу',
-  'Кофе, завтраки и десерты в Грозном',
+  'Блины, завтраки и напитки в Грозном',
   'Теплое меню для быстрых завтраков, спокойных встреч и сладких пауз.',
   '+7 938 994-88-00',
   'Грозный, ул. Хамзата Орзамиева, 30/30А',
@@ -12,21 +12,31 @@ values (
 on conflict (id) do nothing;
 
 insert into menu_categories (slug, name, description, sort_order) values
-  ('coffee', 'Кофе', 'Классика, авторские напитки и мягкие молочные вкусы.', 10),
-  ('tea', 'Чай и лимонады', 'Согревающие сборы, холодные напитки и домашние вкусы.', 20),
-  ('breakfast', 'Завтраки', 'Сытные позиции для утра и позднего старта.', 30),
-  ('desserts', 'Десерты', 'Нежные сладости к кофе и праздничному настроению.', 40)
-on conflict (slug) do nothing;
+  ('pancakes', 'Блины', 'Сладкие и сытные блины с аккуратной подачей.', 10),
+  ('breakfast', 'Завтраки', 'Сытные блюда для утра и позднего старта.', 20),
+  ('drinks', 'Напитки', 'Кофе, чай, лимонады и сезонные вкусы.', 30)
+on conflict (slug) do update set
+  name = excluded.name,
+  description = excluded.description,
+  sort_order = excluded.sort_order;
 
 insert into menu_items (slug, category_id, name, description, price, weight, badges, image, available, sort_order) values
-  ('raf-cardamom', 'coffee', 'Раф кардамон', 'Сливочный кофе с тонкой пряной нотой и бархатной пеной.', 260, '300 мл', '["хит", "нежный"]', 'coffee', true, 10),
-  ('latte-honey', 'coffee', 'Латте медовый', 'Эспрессо, молоко и мягкая сладость меда без лишней тяжести.', 240, '300 мл', '["мягкий"]', 'latte', true, 20),
-  ('americano', 'coffee', 'Американо', 'Чистый вкус зерна, плотный аромат и аккуратная горчинка.', 160, '250 мл', '["классика"]', 'americano', true, 30),
-  ('mountain-tea', 'tea', 'Горный чай', 'Душистый травяной сбор с медовым послевкусием.', 220, '450 мл', '["без кофеина"]', 'tea', true, 10),
-  ('berry-lemonade', 'tea', 'Ягодный лимонад', 'Смородина, мята, цитрус и много льда.', 280, '400 мл', '["холодный"]', 'lemonade', true, 20),
-  ('shakshuka', 'breakfast', 'Шакшука с сыром', 'Яйца в томатном соусе, зелень, сыр и теплый хлеб.', 390, '320 г', '["сытно"]', 'breakfast', true, 10),
-  ('croissant-salmon', 'breakfast', 'Круассан с лососем', 'Хрустящий круассан, сливочный сыр, лосось и свежий огурец.', 430, '210 г', '["премиум"]', 'croissant', true, 20),
-  ('syrniki', 'breakfast', 'Сырники', 'Творожные сырники со сметаной и ягодным соусом.', 340, '240 г', '["сладкое"]', 'syrniki', true, 30),
-  ('pistachio-roll', 'desserts', 'Фисташковый рулет', 'Воздушный бисквит, крем и фисташковая крошка.', 310, '140 г', '["новинка"]', 'dessert', true, 10),
-  ('tiramisu', 'desserts', 'Тирамису', 'Кофейный десерт с маскарпоне и какао.', 320, '150 г', '["к кофе"]', 'tiramisu', true, 20)
-on conflict (slug) do nothing;
+  ('pancake-honey', 'pancakes', 'Блин с медом', 'Тонкий румяный блин со сливочным маслом и горным медом.', 190, '180 г', '["нежный"]', 'dessert', true, 10),
+  ('pancake-chicken', 'pancakes', 'Блин с курицей', 'Сытная начинка из курицы, сыра и зелени.', 290, '240 г', '["сытно"]', 'breakfast', true, 20),
+  ('pancake-berry', 'pancakes', 'Блин с ягодами', 'Творожный крем, ягодный соус и легкая сахарная пудра.', 270, '220 г', '["хит"]', 'syrniki', true, 30),
+  ('omelet-cheese', 'breakfast', 'Омлет с сыром', 'Воздушный омлет, свежая зелень и теплый хлеб.', 320, '260 г', '["завтрак"]', 'breakfast', true, 10),
+  ('syrniki', 'breakfast', 'Сырники', 'Творожные сырники со сметаной и ягодным соусом.', 340, '240 г', '["сладкое"]', 'syrniki', true, 20),
+  ('croissant-salmon', 'breakfast', 'Круассан с лососем', 'Хрустящий круассан, сливочный сыр, лосось и свежий огурец.', 430, '210 г', '["премиум"]', 'croissant', true, 30),
+  ('raf-cardamom', 'drinks', 'Раф кардамон', 'Сливочный кофе с тонкой пряной нотой и бархатной пеной.', 260, '300 мл', '["хит"]', 'coffee', true, 10),
+  ('mountain-tea', 'drinks', 'Горный чай', 'Душистый травяной сбор с медовым послевкусием.', 220, '450 мл', '["без кофеина"]', 'tea', true, 20),
+  ('berry-lemonade', 'drinks', 'Ягодный лимонад', 'Смородина, мята, цитрус и много льда.', 280, '400 мл', '["холодный"]', 'lemonade', true, 30)
+on conflict (slug) do update set
+  category_id = excluded.category_id,
+  name = excluded.name,
+  description = excluded.description,
+  price = excluded.price,
+  weight = excluded.weight,
+  badges = excluded.badges,
+  image = excluded.image,
+  available = excluded.available,
+  sort_order = excluded.sort_order;

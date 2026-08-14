@@ -65,42 +65,58 @@ func migrate(db *gorm.DB) {
 }
 
 func seed(db *gorm.DB) {
-	highlights, _ := json.Marshal([]string{"СЃ СЃРѕР±РѕР№", "Р·Р°РІС‚СЂР°РєРё РІРµСЃСЊ РґРµРЅСЊ", "СЃРІРµР¶Р°СЏ РІС‹РїРµС‡РєР°"})
+	highlights, _ := json.Marshal([]string{"с собой", "завтраки весь день", "свежая выпечка"})
 	db.FirstOrCreate(&models.BrandSettings{}, models.BrandSettings{
 		ID:          1,
-		Name:        "Р§Р°РјР‘Сѓ",
-		Subtitle:    "РљРѕС„Рµ, Р·Р°РІС‚СЂР°РєРё Рё РґРµСЃРµСЂС‚С‹ РІ Р“СЂРѕР·РЅРѕРј",
-		Description: "РўРµРїР»РѕРµ РјРµРЅСЋ РґР»СЏ Р±С‹СЃС‚СЂС‹С… Р·Р°РІС‚СЂР°РєРѕРІ, СЃРїРѕРєРѕР№РЅС‹С… РІСЃС‚СЂРµС‡ Рё СЃР»Р°РґРєРёС… РїР°СѓР·.",
+		Name:        "ЧамБу",
+		Subtitle:    "Блины, завтраки и напитки в Грозном",
+		Description: "Теплое меню для быстрых завтраков, спокойных встреч и сладких пауз.",
 		Phone:       "+7 938 994-88-00",
-		Address:     "Р“СЂРѕР·РЅС‹Р№, СѓР». РҐР°РјР·Р°С‚Р° РћСЂР·Р°РјРёРµРІР°, 30/30Рђ",
-		Hours:       "Р•Р¶РµРґРЅРµРІРЅРѕ 08:00-22:00",
+		Address:     "Грозный, ул. Хамзата Орзамиева, 30/30А",
+		Hours:       "Ежедневно 08:00-22:00",
 		Highlights:  datatypes.JSON(highlights),
 	})
 
-	categories := []models.MenuCategory{
-		{Slug: "coffee", Name: "РљРѕС„Рµ", Description: "РљР»Р°СЃСЃРёРєР°, Р°РІС‚РѕСЂСЃРєРёРµ РЅР°РїРёС‚РєРё Рё РјСЏРіРєРёРµ РјРѕР»РѕС‡РЅС‹Рµ РІРєСѓСЃС‹.", SortOrder: 10},
-		{Slug: "tea", Name: "Р§Р°Р№ Рё Р»РёРјРѕРЅР°РґС‹", Description: "РЎРѕРіСЂРµРІР°СЋС‰РёРµ СЃР±РѕСЂС‹, С…РѕР»РѕРґРЅС‹Рµ РЅР°РїРёС‚РєРё Рё РґРѕРјР°С€РЅРёРµ РІРєСѓСЃС‹.", SortOrder: 20},
-		{Slug: "breakfast", Name: "Р—Р°РІС‚СЂР°РєРё", Description: "РЎС‹С‚РЅС‹Рµ РїРѕР·РёС†РёРё РґР»СЏ СѓС‚СЂР° Рё РїРѕР·РґРЅРµРіРѕ СЃС‚Р°СЂС‚Р°.", SortOrder: 30},
-		{Slug: "desserts", Name: "Р”РµСЃРµСЂС‚С‹", Description: "РќРµР¶РЅС‹Рµ СЃР»Р°РґРѕСЃС‚Рё Рє РєРѕС„Рµ Рё РїСЂР°Р·РґРЅРёС‡РЅРѕРјСѓ РЅР°СЃС‚СЂРѕРµРЅРёСЋ.", SortOrder: 40},
+	fixedCategories := []models.MenuCategory{
+		{Slug: "pancakes", Name: "Блины", Description: "Сладкие и сытные блины с аккуратной подачей.", SortOrder: 10},
+		{Slug: "breakfast", Name: "Завтраки", Description: "Сытные блюда для утра и позднего старта.", SortOrder: 20},
+		{Slug: "drinks", Name: "Напитки", Description: "Кофе, чай, лимонады и сезонные вкусы.", SortOrder: 30},
 	}
-	for _, category := range categories {
-		db.FirstOrCreate(&models.MenuCategory{}, models.MenuCategory{Slug: category.Slug, Name: category.Name, Description: category.Description, SortOrder: category.SortOrder})
+
+	db.Where("slug NOT IN ?", []string{"pancakes", "breakfast", "drinks"}).Delete(&models.MenuCategory{})
+	for _, category := range fixedCategories {
+		var existing models.MenuCategory
+		db.Where("slug = ?", category.Slug).FirstOrCreate(&existing, category)
+		existing.Name = category.Name
+		existing.Description = category.Description
+		existing.SortOrder = category.SortOrder
+		db.Save(&existing)
 	}
 
 	items := []models.MenuItem{
-		menuSeed("raf-cardamom", "coffee", "Р Р°С„ РєР°СЂРґР°РјРѕРЅ", "РЎР»РёРІРѕС‡РЅС‹Р№ РєРѕС„Рµ СЃ С‚РѕРЅРєРѕР№ РїСЂСЏРЅРѕР№ РЅРѕС‚РѕР№ Рё Р±Р°СЂС…Р°С‚РЅРѕР№ РїРµРЅРѕР№.", 260, "300 РјР»", []string{"С…РёС‚", "РЅРµР¶РЅС‹Р№"}, "coffee", 10),
-		menuSeed("latte-honey", "coffee", "Р›Р°С‚С‚Рµ РјРµРґРѕРІС‹Р№", "Р­СЃРїСЂРµСЃСЃРѕ, РјРѕР»РѕРєРѕ Рё РјСЏРіРєР°СЏ СЃР»Р°РґРѕСЃС‚СЊ РјРµРґР° Р±РµР· Р»РёС€РЅРµР№ С‚СЏР¶РµСЃС‚Рё.", 240, "300 РјР»", []string{"РјСЏРіРєРёР№"}, "latte", 20),
-		menuSeed("americano", "coffee", "РђРјРµСЂРёРєР°РЅРѕ", "Р§РёСЃС‚С‹Р№ РІРєСѓСЃ Р·РµСЂРЅР°, РїР»РѕС‚РЅС‹Р№ Р°СЂРѕРјР°С‚ Рё Р°РєРєСѓСЂР°С‚РЅР°СЏ РіРѕСЂС‡РёРЅРєР°.", 160, "250 РјР»", []string{"РєР»Р°СЃСЃРёРєР°"}, "americano", 30),
-		menuSeed("mountain-tea", "tea", "Р“РѕСЂРЅС‹Р№ С‡Р°Р№", "Р”СѓС€РёСЃС‚С‹Р№ С‚СЂР°РІСЏРЅРѕР№ СЃР±РѕСЂ СЃ РјРµРґРѕРІС‹Рј РїРѕСЃР»РµРІРєСѓСЃРёРµРј.", 220, "450 РјР»", []string{"Р±РµР· РєРѕС„РµРёРЅР°"}, "tea", 10),
-		menuSeed("berry-lemonade", "tea", "РЇРіРѕРґРЅС‹Р№ Р»РёРјРѕРЅР°Рґ", "РЎРјРѕСЂРѕРґРёРЅР°, РјСЏС‚Р°, С†РёС‚СЂСѓСЃ Рё РјРЅРѕРіРѕ Р»СЊРґР°.", 280, "400 РјР»", []string{"С…РѕР»РѕРґРЅС‹Р№"}, "lemonade", 20),
-		menuSeed("shakshuka", "breakfast", "РЁР°РєС€СѓРєР° СЃ СЃС‹СЂРѕРј", "РЇР№С†Р° РІ С‚РѕРјР°С‚РЅРѕРј СЃРѕСѓСЃРµ, Р·РµР»РµРЅСЊ, СЃС‹СЂ Рё С‚РµРїР»С‹Р№ С…Р»РµР±.", 390, "320 Рі", []string{"СЃС‹С‚РЅРѕ"}, "breakfast", 10),
-		menuSeed("croissant-salmon", "breakfast", "РљСЂСѓР°СЃСЃР°РЅ СЃ Р»РѕСЃРѕСЃРµРј", "РҐСЂСѓСЃС‚СЏС‰РёР№ РєСЂСѓР°СЃСЃР°РЅ, СЃР»РёРІРѕС‡РЅС‹Р№ СЃС‹СЂ, Р»РѕСЃРѕСЃСЊ Рё СЃРІРµР¶РёР№ РѕРіСѓСЂРµС†.", 430, "210 Рі", []string{"РїСЂРµРјРёСѓРј"}, "croissant", 20),
-		menuSeed("syrniki", "breakfast", "РЎС‹СЂРЅРёРєРё", "РўРІРѕСЂРѕР¶РЅС‹Рµ СЃС‹СЂРЅРёРєРё СЃРѕ СЃРјРµС‚Р°РЅРѕР№ Рё СЏРіРѕРґРЅС‹Рј СЃРѕСѓСЃРѕРј.", 340, "240 Рі", []string{"СЃР»Р°РґРєРѕРµ"}, "syrniki", 30),
-		menuSeed("pistachio-roll", "desserts", "Р¤РёСЃС‚Р°С€РєРѕРІС‹Р№ СЂСѓР»РµС‚", "Р’РѕР·РґСѓС€РЅС‹Р№ Р±РёСЃРєРІРёС‚, РєСЂРµРј Рё С„РёСЃС‚Р°С€РєРѕРІР°СЏ РєСЂРѕС€РєР°.", 310, "140 Рі", []string{"РЅРѕРІРёРЅРєР°"}, "dessert", 10),
-		menuSeed("tiramisu", "desserts", "РўРёСЂР°РјРёСЃСѓ", "РљРѕС„РµР№РЅС‹Р№ РґРµСЃРµСЂС‚ СЃ РјР°СЃРєР°СЂРїРѕРЅРµ Рё РєР°РєР°Рѕ.", 320, "150 Рі", []string{"Рє РєРѕС„Рµ"}, "tiramisu", 20),
+		menuSeed("pancake-honey", "pancakes", "Блин с медом", "Тонкий румяный блин со сливочным маслом и горным медом.", 190, "180 г", []string{"нежный"}, "dessert", 10),
+		menuSeed("pancake-chicken", "pancakes", "Блин с курицей", "Сытная начинка из курицы, сыра и зелени.", 290, "240 г", []string{"сытно"}, "breakfast", 20),
+		menuSeed("pancake-berry", "pancakes", "Блин с ягодами", "Творожный крем, ягодный соус и легкая сахарная пудра.", 270, "220 г", []string{"хит"}, "syrniki", 30),
+		menuSeed("omelet-cheese", "breakfast", "Омлет с сыром", "Воздушный омлет, свежая зелень и теплый хлеб.", 320, "260 г", []string{"завтрак"}, "breakfast", 10),
+		menuSeed("syrniki", "breakfast", "Сырники", "Творожные сырники со сметаной и ягодным соусом.", 340, "240 г", []string{"сладкое"}, "syrniki", 20),
+		menuSeed("croissant-salmon", "breakfast", "Круассан с лососем", "Хрустящий круассан, сливочный сыр, лосось и свежий огурец.", 430, "210 г", []string{"премиум"}, "croissant", 30),
+		menuSeed("raf-cardamom", "drinks", "Раф кардамон", "Сливочный кофе с тонкой пряной нотой и бархатной пеной.", 260, "300 мл", []string{"хит"}, "coffee", 10),
+		menuSeed("mountain-tea", "drinks", "Горный чай", "Душистый травяной сбор с медовым послевкусием.", 220, "450 мл", []string{"без кофеина"}, "tea", 20),
+		menuSeed("berry-lemonade", "drinks", "Ягодный лимонад", "Смородина, мята, цитрус и много льда.", 280, "400 мл", []string{"холодный"}, "lemonade", 30),
 	}
 	for _, item := range items {
-		db.FirstOrCreate(&models.MenuItem{}, models.MenuItem{Slug: item.Slug, CategoryID: item.CategoryID, Name: item.Name, Description: item.Description, Price: item.Price, Weight: item.Weight, Badges: item.Badges, Image: item.Image, Available: item.Available, SortOrder: item.SortOrder})
+		var existing models.MenuItem
+		db.Where("slug = ?", item.Slug).FirstOrCreate(&existing, item)
+		existing.CategoryID = item.CategoryID
+		existing.Name = item.Name
+		existing.Description = item.Description
+		existing.Price = item.Price
+		existing.Weight = item.Weight
+		existing.Badges = item.Badges
+		existing.Image = item.Image
+		existing.Available = item.Available
+		existing.SortOrder = item.SortOrder
+		db.Save(&existing)
 	}
 
 	password, _ := bcrypt.GenerateFromPassword([]byte("chambu-admin"), bcrypt.DefaultCost)
@@ -111,7 +127,6 @@ func seed(db *gorm.DB) {
 		Role:         "owner",
 	})
 }
-
 func menuSeed(slug, categoryID, name, description string, price int64, weight string, badges []string, image string, sortOrder int) models.MenuItem {
 	rawBadges, _ := json.Marshal(badges)
 	return models.MenuItem{

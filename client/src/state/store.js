@@ -6,7 +6,7 @@ export function createStore({ api, onChange }) {
     activeCategory: 'all',
     query: '',
     cart: new Map(),
-    adminToken: localStorage.getItem('chambu.adminToken') || '',
+    adminToken: localStorage.getItem('chambu.jwt') || '',
     notice: '',
     loading: true,
   };
@@ -54,31 +54,24 @@ export function createStore({ api, onChange }) {
       emit();
     },
 
-    setAdminToken(token) {
-      state.adminToken = token;
-      localStorage.setItem('chambu.adminToken', token);
-    },
-
-    async saveCategory(category) {
+    async login({ email, password }) {
       try {
-        await api.saveCategory(state.adminToken, category);
-        state.notice = 'Категория сохранена.';
-        await refresh();
+        const response = await api.login(email, password);
+        state.adminToken = response.token;
+        localStorage.setItem('chambu.jwt', response.token);
+        state.notice = '';
+        emit();
       } catch (error) {
         state.notice = error.message;
         emit();
       }
     },
 
-    async deleteCategory(id) {
-      try {
-        await api.deleteCategory(state.adminToken, id);
-        state.notice = 'Категория удалена.';
-        await refresh();
-      } catch (error) {
-        state.notice = error.message;
-        emit();
-      }
+    logout() {
+      state.adminToken = '';
+      localStorage.removeItem('chambu.jwt');
+      state.notice = '';
+      emit();
     },
 
     async saveItem(item) {

@@ -36,11 +36,6 @@ func (h *MenuHandler) RegisterRoutes(authorized *gin.RouterGroup, unauthorized *
 		protectedItems.DELETE("/:id", h.Delete)
 	}
 
-	protectedCategories := authorized.Group("/api/admin/categories")
-	{
-		protectedCategories.POST("", h.SaveCategory)
-		protectedCategories.DELETE("/:id", h.DeleteCategory)
-	}
 }
 
 func (h *MenuHandler) Catalog(c *gin.Context) {

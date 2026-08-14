@@ -1,30 +1,47 @@
-import { escapeAttr, formatPrice } from '../utils/format.js';
+import { formatPrice } from '../utils/format.js';
 
 export function renderAdmin(state) {
+  if (!state.adminToken) return renderLogin(state);
+
   return `
-    <main class="admin-page">
-      <header class="admin-head">
-        <button class="admin-link" data-route="menu">Меню</button>
+    <main class="admin-page admin-page--workbench">
+      <header class="admin-mobile-bar">
+        <button class="admin-icon-button" data-route="menu" aria-label="Вернуться в меню">←</button>
         <div>
-          <p class="eyebrow">Админ-панель</p>
-          <h1>Управление меню</h1>
+          <span>ЧамБу</span>
+          <strong>Админ-панель</strong>
         </div>
+        <button class="admin-icon-button" data-logout aria-label="Выйти">×</button>
       </header>
 
-      ${state.notice ? `<p class="notice">${state.notice}</p>` : ''}
+      ${state.notice ? `<p class="notice admin-notice">${state.notice}</p>` : ''}
 
-      <section class="admin-grid">
-        <form class="admin-panel" data-category-form>
-          <h2>Категория</h2>
-          <input name="id" placeholder="id: coffee" required />
-          <input name="name" placeholder="Название" required />
-          <textarea name="description" placeholder="Описание"></textarea>
-          <button class="button button--primary" type="submit">Сохранить</button>
-        </form>
+      <section class="admin-dashboard">
+        <article>
+          <span>Категории</span>
+          <strong>3</strong>
+        </article>
+        <article>
+          <span>Позиции</span>
+          <strong>${state.catalog.items.length}</strong>
+        </article>
+        <article>
+          <span>В витрине</span>
+          <strong>${state.catalog.items.filter((item) => item.available).length}</strong>
+        </article>
+      </section>
 
-        <form class="admin-panel" data-item-form enctype="multipart/form-data">
-          <h2>Позиция</h2>
-          <input name="id" placeholder="id: raf-cardamom" required />
+      <section class="admin-fixed-cats" aria-label="Фиксированные категории">
+        ${state.catalog.categories.map((category) => `<span>${category.name}</span>`).join('')}
+      </section>
+
+      <section class="admin-editor">
+        <form class="admin-panel admin-panel--editor" data-item-form enctype="multipart/form-data">
+          <div class="admin-panel-title">
+            <span>Новая позиция</span>
+            <strong>Меню</strong>
+          </div>
+          <input name="id" placeholder="id: pancake-honey" required />
           <select name="categoryId" required>
             ${state.catalog.categories.map((category) => `<option value="${category.id}">${category.name}</option>`).join('')}
           </select>
@@ -35,7 +52,7 @@ export function renderAdmin(state) {
             <input name="weight" placeholder="Вес/объем" />
           </div>
           <input name="badges" placeholder="Бейджи через запятую" />
-          <input name="image" placeholder="Тема: coffee, dessert" value="coffee" />
+          <input name="image" placeholder="Тема: breakfast, dessert, coffee" value="breakfast" />
           <label class="fileline">
             <span>Фото блюда</span>
             <input name="imageFile" type="file" accept="image/*" />
@@ -44,51 +61,58 @@ export function renderAdmin(state) {
             <input name="available" type="checkbox" checked />
             <span>Показывать гостям</span>
           </label>
-          <button class="button button--primary" type="submit">Сохранить</button>
+          <button class="button button--primary" type="submit">Сохранить позицию</button>
         </form>
-
-        <section class="admin-panel admin-token">
-          <h2>Доступ</h2>
-          <input data-admin-token type="password" placeholder="ADMIN_TOKEN" value="${escapeAttr(state.adminToken)}" />
-          <p>Токен хранится только в браузере администратора.</p>
-        </section>
       </section>
 
-      <section class="admin-list">
-        <h2>Категории</h2>
-        ${state.catalog.categories.map(categoryRow).join('')}
-      </section>
-
-      <section class="admin-list">
-        <h2>Позиции</h2>
+      <section class="admin-list admin-list--cards">
+        <div class="admin-section-title">
+          <span>Витрина</span>
+          <strong>Позиции меню</strong>
+        </div>
         ${state.catalog.items.map(itemRow).join('')}
       </section>
     </main>
   `;
 }
 
-function categoryRow(category) {
+function renderLogin(state) {
   return `
-    <article class="admin-row">
-      <div>
-        <strong>${category.name}</strong>
-        <span>${category.id}</span>
-        <p>${category.description}</p>
-      </div>
-      <button class="danger-button" data-delete-category="${category.id}">Удалить</button>
-    </article>
+    <main class="admin-login-page">
+      <section class="admin-login-card">
+        <button class="admin-login-back" data-route="menu">← Меню</button>
+        <p class="eyebrow">Только для команды</p>
+        <h1>Вход в админ-панель</h1>
+        <p>Управление позициями меню доступно после авторизации администратора.</p>
+        ${state.notice ? `<p class="notice admin-login-notice">${state.notice}</p>` : ''}
+        <form data-login-form class="admin-login-form">
+          <input name="email" type="email" placeholder="admin@chambu.local" autocomplete="username" required />
+          <input name="password" type="password" placeholder="Пароль" autocomplete="current-password" required />
+          <button class="button button--primary" type="submit">Войти</button>
+        </form>
+      </section>
+    </main>
   `;
 }
 
 function itemRow(item) {
   return `
-    <article class="admin-row">
+    <article class="admin-dish-row">
+      <div class="admin-dish-row__image">${item.name.slice(0, 1)}</div>
       <div>
         <strong>${item.name}</strong>
-        <span>${item.categoryId} · ${formatPrice(item.price)} · ${item.weight}</span>
+        <span>${categoryName(item.categoryId)} · ${formatPrice(item.price)} · ${item.weight}</span>
         <p>${item.description}</p>
       </div>
       <button class="danger-button" data-delete-item="${item.id}">Удалить</button>
     </article>
   `;
+}
+
+function categoryName(id) {
+  return {
+    pancakes: 'Блины',
+    breakfast: 'Завтраки',
+    drinks: 'Напитки',
+  }[id] || id;
 }

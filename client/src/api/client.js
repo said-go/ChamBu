@@ -7,30 +7,14 @@ export class ApiClient {
     return this.request('/menu');
   }
 
-  async saveCategory(token, category) {
-    return this.request('/admin/categories', {
+  async login(email, password) {
+    return this.rawRequest('/auth/login', {
       method: 'POST',
-      token,
-      body: category,
-    });
-  }
-
-  async deleteCategory(token, id) {
-    return this.request(`/admin/categories/${encodeURIComponent(id)}`, {
-      method: 'DELETE',
-      token,
+      body: { email, password },
     });
   }
 
   async saveItem(token, item) {
-    if (item instanceof FormData) {
-      return this.request('/admin/items', {
-        method: 'POST',
-        token,
-        body: item,
-      });
-    }
-
     return this.request('/admin/items', {
       method: 'POST',
       token,
@@ -46,12 +30,16 @@ export class ApiClient {
   }
 
   async request(path, options = {}) {
+    return this.rawRequest(`${this.baseURL}${path}`, options);
+  }
+
+  async rawRequest(url, options = {}) {
     const isFormData = options.body instanceof FormData;
     const headers = { Accept: 'application/json' };
     if (options.body && !isFormData) headers['Content-Type'] = 'application/json';
-    if (options.token) headers['X-Admin-Token'] = options.token;
+    if (options.token) headers.Authorization = `Bearer ${options.token}`;
 
-    const response = await fetch(`${this.baseURL}${path}`, {
+    const response = await fetch(url, {
       method: options.method || 'GET',
       headers,
       body: isFormData ? options.body : options.body ? JSON.stringify(options.body) : undefined,

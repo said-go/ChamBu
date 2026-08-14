@@ -46,24 +46,19 @@ function bindMenuEvents() {
 }
 
 function bindAdminEvents() {
-  document.querySelector('[data-admin-token]')?.addEventListener('input', (event) => {
-    store.setAdminToken(event.target.value);
+  document.querySelector('[data-login-form]')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    await store.login(Object.fromEntries(new FormData(event.currentTarget)));
   });
 
-  document.querySelector('[data-category-form]')?.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    await store.saveCategory(Object.fromEntries(new FormData(event.currentTarget)));
-    event.currentTarget.reset();
+  document.querySelector('[data-logout]')?.addEventListener('click', () => {
+    store.logout();
   });
 
   document.querySelector('[data-item-form]')?.addEventListener('submit', async (event) => {
     event.preventDefault();
     await store.saveItem(new FormData(event.currentTarget));
     event.currentTarget.reset();
-  });
-
-  document.querySelectorAll('[data-delete-category]').forEach((button) => {
-    button.addEventListener('click', () => store.deleteCategory(button.dataset.deleteCategory));
   });
 
   document.querySelectorAll('[data-delete-item]').forEach((button) => {

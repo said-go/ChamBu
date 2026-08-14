@@ -12,12 +12,12 @@
 ```powershell
 cd server
 $env:DATABASE_URL="postgres://user:password@localhost:5432/chambu?sslmode=disable"
-$env:ADMIN_TOKEN="strong-admin-token"
 go run ./cmd/api
 ```
 
 Откройте `http://localhost:8080`.
 Админка доступна по `http://localhost:8080/#admin`.
+Сначала открывается экран входа. Без JWT админская панель не показывает рабочий интерфейс.
 
 ## PostgreSQL
 
@@ -56,15 +56,14 @@ $env:CLOUDINARY_API_SECRET="..."
 - `GET /api/health` - проверка сервера.
 - `GET /api/menu` - бренд, категории и позиции меню.
 - `GET /api/menu/items` - список позиций с фильтрами `category`, `search`, `page`, `limit`.
-- `POST /api/admin/categories` - создать или обновить категорию.
-- `DELETE /api/admin/categories/{id}` - удалить категорию по slug.
 - `POST /api/admin/items` - создать или обновить позицию меню; поддерживает JSON и multipart form.
 - `PUT /api/admin/items/{id}` - обновить позицию по numeric ID.
 - `DELETE /api/admin/items/{id}` - удалить позицию по slug.
 - `POST /orders` - создать заказ.
 - `GET /orders` - список заказов для администратора.
 
-Админские запросы принимают `X-Admin-Token: <ADMIN_TOKEN>` или JWT из `Authorization: Bearer <token>` после `/auth/login`.
+Админские запросы принимают JWT из `Authorization: Bearer <token>` после `/auth/login`.
+Категории не создаются через админку: доступны только фиксированные `Блины`, `Завтраки`, `Напитки`.
 
 Seed-администратор для локального старта:
 
