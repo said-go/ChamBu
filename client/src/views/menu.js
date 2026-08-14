@@ -22,7 +22,6 @@ export function renderMenu(state) {
         <div class="topbar__meta">
           <span>${brand.hours}</span>
           <a href="tel:${digits(brand.phone)}">${brand.phone}</a>
-          <button class="admin-link" data-route="admin">Админ</button>
         </div>
       </nav>
       <section class="hero__content">
@@ -51,7 +50,7 @@ export function renderMenu(state) {
           </div>
           <label class="search">
             <span>Поиск</span>
-            <input data-search type="search" placeholder="раф, круассан, чай" value="${escapeAttr(state.query)}" />
+            <input data-search type="search" placeholder="блин, сырники, чай" value="${escapeAttr(state.query)}" />
           </label>
           <div class="tabs">
             ${categoryButton({ id: 'all', name: 'Все' }, state.activeCategory)}
@@ -65,13 +64,11 @@ export function renderMenu(state) {
       </section>
     </main>
 
-    <footer class="cart-bar">
-      <div>
-        <strong>${cartCount(state.cart)} поз.</strong>
-        <span>${formatPrice(cartTotal(state.catalog.items, state.cart))}</span>
-      </div>
-      <a class="button button--primary ${cartCount(state.cart) ? '' : 'is-disabled'}" href="${orderHref(state)}">Оформить</a>
+    <footer class="site-footer">
+      <button class="admin-footer-link" data-route="admin">Для администратора</button>
     </footer>
+
+    ${cartCount(state.cart) ? cartBar(state) : ''}
   `;
 }
 
@@ -108,6 +105,18 @@ function itemCard(item, cart) {
   `;
 }
 
+function cartBar(state) {
+  return `
+    <footer class="cart-bar">
+      <div>
+        <strong>${cartCount(state.cart)} поз.</strong>
+        <span>${formatPrice(cartTotal(state.catalog.items, state.cart))}</span>
+      </div>
+      <a class="button button--primary" href="${orderHref(state)}">Оформить</a>
+    </footer>
+  `;
+}
+
 function filteredItems(state) {
   const query = state.query.trim().toLowerCase();
   return state.catalog.items.filter((item) => {
@@ -126,7 +135,6 @@ function cartTotal(items, cart) {
 }
 
 function orderHref(state) {
-  if (!cartCount(state.cart)) return '#menu';
   const lines = state.catalog.items
     .filter((item) => state.cart.has(item.id))
     .map((item) => `${item.name} x ${state.cart.get(item.id)} - ${formatPrice(item.price * state.cart.get(item.id))}`);

@@ -20,23 +20,32 @@ import (
 
 func main() {
 	cfg := config.FromEnv()
-	db := config.OpenDatabase(cfg)
-	migrate(db)
-	seed(db)
-
-	store := buildStorage(cfg)
-	adminRepo := repository.NewAdminRepository(db)
-	menuRepo := repository.NewMenuRepository(db)
-	orderRepo := repository.NewOrderRepository(db)
-
-	menuService := service.NewMenuService(menuRepo, store)
-	orderService := service.NewOrderService(orderRepo, menuRepo)
-	adminService := service.NewAdminService(adminRepo)
-	authService := service.NewAuthService(adminRepo)
-
 	router := gin.Default()
 	router.MaxMultipartMemory = 8 << 20
-	transport.RegisterRoutes(router, menuService, orderService, adminService, authService)
+
+	db, err := config.TryOpenDatabase(cfg)
+	if err != nil {
+		log.Printf("postgres unavailable, starting frontend preview mode: %v", err)
+		router.GET("/api/health", func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{"status": "degraded", "mode": "frontend-preview"})
+		})
+	} else {
+		migrate(db)
+		seed(db)
+
+		store := buildStorage(cfg)
+		adminRepo := repository.NewAdminRepository(db)
+		menuRepo := repository.NewMenuRepository(db)
+		orderRepo := repository.NewOrderRepository(db)
+
+		menuService := service.NewMenuService(menuRepo, store)
+		orderService := service.NewOrderService(orderRepo, menuRepo)
+		adminService := service.NewAdminService(adminRepo)
+		authService := service.NewAuthService(adminRepo)
+
+		transport.RegisterRoutes(router, menuService, orderService, adminService, authService)
+	}
+
 	router.StaticFS("/assets", http.Dir(cfg.ClientDir+"/assets"))
 	router.StaticFS("/src", http.Dir(cfg.ClientDir+"/src"))
 	router.StaticFile("/styles.css", cfg.ClientDir+"/styles.css")

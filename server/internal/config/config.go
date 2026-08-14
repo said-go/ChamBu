@@ -57,6 +57,14 @@ func SetUpDatabaseConnection() *gorm.DB {
 }
 
 func OpenDatabase(cfg Config) *gorm.DB {
+	db, err := TryOpenDatabase(cfg)
+	if err != nil {
+		panic(err)
+	}
+	return db
+}
+
+func TryOpenDatabase(cfg Config) (*gorm.DB, error) {
 	dsn := cfg.DatabaseURL
 	if dsn == "" {
 		dsn = fmt.Sprintf("host=%v user=%v password=%v dbname=%v port=%v sslmode=disable", cfg.DBHost, cfg.DBUser, cfg.DBPass, cfg.DBName, cfg.DBPort)
@@ -68,18 +76,18 @@ func OpenDatabase(cfg Config) *gorm.DB {
 	}), &gorm.Config{})
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	sqlDB, err := db.DB()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	sqlDB.SetMaxOpenConns(10)
 	sqlDB.SetMaxIdleConns(5)
 	sqlDB.SetConnMaxLifetime(30 * time.Minute)
 
-	return db
+	return db, nil
 }
 
 func env(key, fallback string) string {
