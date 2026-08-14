@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-chambu}
+      POSTGRES_USER: ${POSTGRES_USER:-chambu}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-chambu} -d ${POSTGRES_DB:-chambu}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8080
+      CLIENT_DIR: /app/client
+      DATABASE_URL: postgres://${POSTGRES_USER:-chambu}:${POSTGRES_PASSWORD:-change-me}@db:5432/${POSTGRES_DB:-chambu}?sslmode=disable
+      JWT_SECRET: ${JWT_SECRET:-change-this-jwt-secret}
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-yandex}
+      YANDEX_DISK_TOKEN: ${YANDEX_DISK_TOKEN:-}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+    ports:
+      - "${APP_PORT:-8080}:8080"
+
+volumes:
+  postgres_data:

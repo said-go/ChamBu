@@ -20,6 +20,25 @@ go run ./cmd/api
 Сначала открывается экран входа. Без JWT админская панель не показывает рабочий интерфейс.
 Если PostgreSQL недоступен, сервер всё равно поднимет фронтенд в preview-режиме, а меню покажет локальные fallback-данные.
 
+## Docker
+
+Для локального или серверного запуска через Docker:
+
+```powershell
+Copy-Item .env.example .env
+docker compose up -d --build
+```
+
+Перед этой командой Docker Desktop или Docker daemon должен быть запущен.
+
+Перед продакшеном обязательно поменяйте в `.env`:
+
+- `POSTGRES_PASSWORD`
+- `JWT_SECRET`
+- настройки хранилища фото, если используется Cloudinary или Yandex Disk
+
+Приложение будет доступно на `http://localhost:8080` или на порту из `APP_PORT`.
+
 ## PostgreSQL
 
 Бэкенд выполняет `AutoMigrate` при старте. SQL-миграции также лежат в `server/migrations` для ручного применения или будущего migration runner:
@@ -65,6 +84,22 @@ $env:CLOUDINARY_API_SECRET="..."
 
 Админские запросы принимают JWT из `Authorization: Bearer <token>` после `/auth/login`.
 Категории не создаются через админку: доступны только фиксированные `Блины`, `Завтраки`, `Напитки`.
+
+## Домен и Google
+
+Перед выкладкой на домен замените `your-domain.ru` в:
+
+- `client/robots.txt`
+- `client/sitemap.xml`
+- `deploy/nginx.conf.example`
+
+Для сервера с Nginx можно взять пример из `deploy/nginx.conf.example`: Nginx принимает трафик на домене и проксирует его в приложение на `127.0.0.1:8080`.
+
+После запуска на домене:
+
+- включите HTTPS, например через Certbot
+- добавьте сайт в Google Search Console
+- отправьте `https://ваш-домен/sitemap.xml`
 
 Seed-администратор для локального старта:
 

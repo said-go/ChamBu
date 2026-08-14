@@ -50,6 +50,8 @@ func main() {
 	router.StaticFS("/assets", http.Dir(cfg.ClientDir+"/assets"))
 	router.StaticFS("/src", http.Dir(cfg.ClientDir+"/src"))
 	router.StaticFile("/styles.css", cfg.ClientDir+"/styles.css")
+	router.StaticFile("/robots.txt", cfg.ClientDir+"/robots.txt")
+	router.StaticFile("/sitemap.xml", cfg.ClientDir+"/sitemap.xml")
 	router.StaticFile("/", cfg.ClientDir+"/index.html")
 	router.NoRoute(func(c *gin.Context) {
 		c.File(cfg.ClientDir + "/index.html")
@@ -146,6 +148,7 @@ func seed(db *gorm.DB) {
 		Role:         "owner",
 	})
 }
+
 func menuSeed(slug, categoryID, name, description string, price int64, weight string, badges []string, image string, sortOrder int) models.MenuItem {
 	rawBadges, _ := json.Marshal(badges)
 	return models.MenuItem{
