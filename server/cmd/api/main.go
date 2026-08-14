@@ -22,6 +22,7 @@ func main() {
 	cfg := config.FromEnv()
 	router := gin.Default()
 	router.MaxMultipartMemory = 8 << 20
+	router.Use(noCache())
 
 	db, err := config.TryOpenDatabase(cfg)
 	if err != nil {
@@ -57,6 +58,15 @@ func main() {
 	log.Printf("ChamBu API listening on http://localhost%s", cfg.Addr())
 	if err := router.Run(cfg.Addr()); err != nil {
 		log.Fatalf("server stopped: %v", err)
+	}
+}
+
+func noCache() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+		c.Header("Pragma", "no-cache")
+		c.Header("Expires", "0")
+		c.Next()
 	}
 }
 
