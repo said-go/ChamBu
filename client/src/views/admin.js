@@ -96,9 +96,10 @@ function renderLogin(state) {
 }
 
 function itemRow(item) {
+  const imageUrl = item.imageUrl || dishImageByCategory(item.categoryId);
   return `
     <article class="admin-dish-row">
-      <div class="admin-dish-row__image">${item.name.slice(0, 1)}</div>
+      <div class="admin-dish-row__image ${imageUrl ? 'admin-dish-row__image--photo' : ''}" style="${imageUrl ? `background-image: url('${imageUrl}')` : ''}">${imageUrl ? '' : item.name.slice(0, 1)}</div>
       <div>
         <strong>${item.name}</strong>
         <span>${categoryName(item.categoryId)} · ${formatPrice(item.price)} · ${item.weight}</span>
@@ -115,4 +116,12 @@ function categoryName(id) {
     breakfast: 'Завтраки',
     drinks: 'Напитки',
   }[id] || id;
+}
+
+function dishImageByCategory(categoryId) {
+  return {
+    pancakes: '/assets/dishes/blini-round.jpg',
+    breakfast: '/assets/dishes/blini-folded.jpg',
+    drinks: '/assets/dishes/citrus.jpg',
+  }[categoryId];
 }

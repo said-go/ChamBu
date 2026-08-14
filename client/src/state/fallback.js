@@ -14,9 +14,9 @@ export const fallbackCatalog = {
     { id: 'drinks', name: 'Напитки', description: 'Кофе, чай и лимонады.' },
   ],
   items: [
-    { id: 'pancake-honey', categoryId: 'pancakes', name: 'Блин с медом', description: 'Тонкий румяный блин со сливочным маслом и горным медом.', price: 190, weight: '180 г', badges: ['нежный'], image: 'dessert', available: true },
-    { id: 'pancake-chicken', categoryId: 'pancakes', name: 'Блин с курицей', description: 'Сытная начинка из курицы, сыра и зелени.', price: 290, weight: '240 г', badges: ['сытно'], image: 'breakfast', available: true },
-    { id: 'syrniki', categoryId: 'breakfast', name: 'Сырники', description: 'Творожные сырники со сметаной и ягодным соусом.', price: 340, weight: '240 г', badges: ['сладкое'], image: 'syrniki', available: true },
-    { id: 'raf-cardamom', categoryId: 'drinks', name: 'Раф кардамон', description: 'Сливочный кофе с тонкой пряной нотой.', price: 260, weight: '300 мл', badges: ['хит'], image: 'coffee', available: true },
+    { id: 'pancake-honey', categoryId: 'pancakes', name: 'Блин с медом', description: 'Тонкий румяный блин со сливочным маслом и горным медом.', price: 190, weight: '180 г', badges: ['нежный'], image: 'pancake-folded', imageUrl: '/assets/dishes/blini-folded.jpg', available: true },
+    { id: 'pancake-chicken', categoryId: 'pancakes', name: 'Блин с курицей', description: 'Сытная начинка из курицы, сыра и зелени.', price: 290, weight: '240 г', badges: ['сытно'], image: 'pancake-stack', imageUrl: '/assets/dishes/blini-stack.jpg', available: true },
+    { id: 'syrniki', categoryId: 'breakfast', name: 'Сырники', description: 'Творожные сырники со сметаной и ягодным соусом.', price: 340, weight: '240 г', badges: ['сладкое'], image: 'pancake-berries', imageUrl: '/assets/dishes/blini-berries.jpg', available: true },
+    { id: 'raf-cardamom', categoryId: 'drinks', name: 'Раф кардамон', description: 'Сливочный кофе с тонкой пряной нотой.', price: 260, weight: '300 мл', badges: ['хит'], image: 'citrus', imageUrl: '/assets/dishes/citrus.jpg', available: true },
   ],
 };

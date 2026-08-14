@@ -1,6 +1,10 @@
 import { digits, escapeAttr, formatPrice } from '../utils/format.js';
 
 const imageThemes = {
+  citrus: ['#d97822', '#f3dfb2'],
+  'pancake-folded': ['#b47731', '#f2d39d'],
+  'pancake-stack': ['#8f5b2d', '#e6bd75'],
+  'pancake-berries': ['#8f4f36', '#d99b8e'],
   coffee: ['#4a2b1b', '#c58b54'],
   latte: ['#6b4a2f', '#ead2a5'],
   americano: ['#2d1b14', '#8f5c35'],
@@ -80,10 +84,14 @@ function categoryButton(category, activeCategory) {
 function itemCard(item, cart) {
   const qty = cart.get(item.id) || 0;
   const colors = imageThemes[item.image] || ['#314f45', '#d7ad6a'];
+  const imageUrl = item.imageUrl || dishImageBySlug(item.id) || dishImageByCategory(item.categoryId);
+  const imageStyle = imageUrl
+    ? `background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.18)), url('${imageUrl}')`
+    : `--c1: ${colors[0]}; --c2: ${colors[1]}`;
   return `
     <article class="menu-card">
-      <div class="dish-art" style="--c1: ${colors[0]}; --c2: ${colors[1]}">
-        <span>${item.name.slice(0, 1)}</span>
+      <div class="dish-art ${imageUrl ? 'dish-art--photo' : ''}" style="${imageStyle}">
+        ${imageUrl ? '' : `<span>${item.name.slice(0, 1)}</span>`}
       </div>
       <div class="menu-card__body">
         <div class="menu-card__title">
@@ -103,6 +111,28 @@ function itemCard(item, cart) {
       </div>
     </article>
   `;
+}
+
+function dishImageBySlug(slug) {
+  return {
+    'pancake-honey': '/assets/dishes/blini-folded.jpg',
+    'pancake-chicken': '/assets/dishes/blini-stack.jpg',
+    'pancake-berry': '/assets/dishes/blini-berries.jpg',
+    'omelet-cheese': '/assets/dishes/blini-round.jpg',
+    syrniki: '/assets/dishes/blini-berries.jpg',
+    'croissant-salmon': '/assets/dishes/blini-folded.jpg',
+    'raf-cardamom': '/assets/dishes/citrus.jpg',
+    'mountain-tea': '/assets/dishes/citrus.jpg',
+    'berry-lemonade': '/assets/dishes/citrus.jpg',
+  }[slug];
+}
+
+function dishImageByCategory(categoryId) {
+  return {
+    pancakes: '/assets/dishes/blini-round.jpg',
+    breakfast: '/assets/dishes/blini-folded.jpg',
+    drinks: '/assets/dishes/citrus.jpg',
+  }[categoryId];
 }
 
 function cartBar(state) {

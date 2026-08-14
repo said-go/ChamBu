@@ -115,15 +115,15 @@ func seed(db *gorm.DB) {
 	}
 
 	items := []models.MenuItem{
-		menuSeed("pancake-honey", "pancakes", "Блин с медом", "Тонкий румяный блин со сливочным маслом и горным медом.", 190, "180 г", []string{"нежный"}, "dessert", 10),
-		menuSeed("pancake-chicken", "pancakes", "Блин с курицей", "Сытная начинка из курицы, сыра и зелени.", 290, "240 г", []string{"сытно"}, "breakfast", 20),
-		menuSeed("pancake-berry", "pancakes", "Блин с ягодами", "Творожный крем, ягодный соус и легкая сахарная пудра.", 270, "220 г", []string{"хит"}, "syrniki", 30),
-		menuSeed("omelet-cheese", "breakfast", "Омлет с сыром", "Воздушный омлет, свежая зелень и теплый хлеб.", 320, "260 г", []string{"завтрак"}, "breakfast", 10),
-		menuSeed("syrniki", "breakfast", "Сырники", "Творожные сырники со сметаной и ягодным соусом.", 340, "240 г", []string{"сладкое"}, "syrniki", 20),
-		menuSeed("croissant-salmon", "breakfast", "Круассан с лососем", "Хрустящий круассан, сливочный сыр, лосось и свежий огурец.", 430, "210 г", []string{"премиум"}, "croissant", 30),
-		menuSeed("raf-cardamom", "drinks", "Раф кардамон", "Сливочный кофе с тонкой пряной нотой и бархатной пеной.", 260, "300 мл", []string{"хит"}, "coffee", 10),
-		menuSeed("mountain-tea", "drinks", "Горный чай", "Душистый травяной сбор с медовым послевкусием.", 220, "450 мл", []string{"без кофеина"}, "tea", 20),
-		menuSeed("berry-lemonade", "drinks", "Ягодный лимонад", "Смородина, мята, цитрус и много льда.", 280, "400 мл", []string{"холодный"}, "lemonade", 30),
+		menuSeed("pancake-honey", "pancakes", "Блин с медом", "Тонкий румяный блин со сливочным маслом и горным медом.", 190, "180 г", []string{"нежный"}, "pancake-folded", "/assets/dishes/blini-folded.jpg", 10),
+		menuSeed("pancake-chicken", "pancakes", "Блин с курицей", "Сытная начинка из курицы, сыра и зелени.", 290, "240 г", []string{"сытно"}, "pancake-stack", "/assets/dishes/blini-stack.jpg", 20),
+		menuSeed("pancake-berry", "pancakes", "Блин с ягодами", "Творожный крем, ягодный соус и легкая сахарная пудра.", 270, "220 г", []string{"хит"}, "pancake-berries", "/assets/dishes/blini-berries.jpg", 30),
+		menuSeed("omelet-cheese", "breakfast", "Омлет с сыром", "Воздушный омлет, свежая зелень и теплый хлеб.", 320, "260 г", []string{"завтрак"}, "pancake-stack", "/assets/dishes/blini-round.jpg", 10),
+		menuSeed("syrniki", "breakfast", "Сырники", "Творожные сырники со сметаной и ягодным соусом.", 340, "240 г", []string{"сладкое"}, "pancake-berries", "/assets/dishes/blini-berries.jpg", 20),
+		menuSeed("croissant-salmon", "breakfast", "Круассан с лососем", "Хрустящий круассан, сливочный сыр, лосось и свежий огурец.", 430, "210 г", []string{"премиум"}, "pancake-folded", "/assets/dishes/blini-folded.jpg", 30),
+		menuSeed("raf-cardamom", "drinks", "Раф кардамон", "Сливочный кофе с тонкой пряной нотой и бархатной пеной.", 260, "300 мл", []string{"хит"}, "citrus", "/assets/dishes/citrus.jpg", 10),
+		menuSeed("mountain-tea", "drinks", "Горный чай", "Душистый травяной сбор с медовым послевкусием.", 220, "450 мл", []string{"без кофеина"}, "citrus", "/assets/dishes/citrus.jpg", 20),
+		menuSeed("berry-lemonade", "drinks", "Ягодный лимонад", "Смородина, мята, цитрус и много льда.", 280, "400 мл", []string{"холодный"}, "citrus", "/assets/dishes/citrus.jpg", 30),
 	}
 	for _, item := range items {
 		var existing models.MenuItem
@@ -135,6 +135,7 @@ func seed(db *gorm.DB) {
 		existing.Weight = item.Weight
 		existing.Badges = item.Badges
 		existing.Image = item.Image
+		existing.ImageURL = item.ImageURL
 		existing.Available = item.Available
 		existing.SortOrder = item.SortOrder
 		db.Save(&existing)
@@ -149,7 +150,7 @@ func seed(db *gorm.DB) {
 	})
 }
 
-func menuSeed(slug, categoryID, name, description string, price int64, weight string, badges []string, image string, sortOrder int) models.MenuItem {
+func menuSeed(slug, categoryID, name, description string, price int64, weight string, badges []string, image string, imageURL string, sortOrder int) models.MenuItem {
 	rawBadges, _ := json.Marshal(badges)
 	return models.MenuItem{
 		Slug:        slug,
@@ -160,6 +161,7 @@ func menuSeed(slug, categoryID, name, description string, price int64, weight st
 		Weight:      weight,
 		Badges:      datatypes.JSON(rawBadges),
 		Image:       image,
+		ImageURL:    imageURL,
 		Available:   true,
 		SortOrder:   sortOrder,
 	}
