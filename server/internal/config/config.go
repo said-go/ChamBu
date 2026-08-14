@@ -40,9 +40,9 @@ func FromEnv() Config {
 		DBName:      env("DB_NAME", "chambu"),
 		DBPort:      env("DB_PORT", "5432"),
 		Storage:     env("STORAGE_DRIVER", "yandex"),
-		CloudName:   env("CLOUDINARY_CLOUD_NAME", ""),
-		CloudKey:    env("CLOUDINARY_API_KEY", ""),
-		CloudSecret: env("CLOUDINARY_API_SECRET", ""),
+		CloudName:   env("CLOUDINARY_CLOUD_NAME", env("CLOUD_NAME", "")),
+		CloudKey:    env("CLOUDINARY_API_KEY", env("API_KEY", "")),
+		CloudSecret: env("CLOUDINARY_API_SECRET", env("API_SECRET", "")),
 		YandexToken: env("YANDEX_DISK_TOKEN", ""),
 	}
 }

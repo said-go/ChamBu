@@ -6,7 +6,7 @@ import (
 )
 
 type BrandSettings struct {
-	ID          uint           `json:"id" gorm:"primaryKey;default:1"`
+	ID          uint           `json:"id" gorm:"primaryKey"`
 	Name        string         `json:"name" gorm:"not null"`
 	Subtitle    string         `json:"subtitle"`
 	Description string         `json:"description"`
