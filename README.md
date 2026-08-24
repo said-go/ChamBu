@@ -22,6 +22,17 @@ go run ./cmd/api
 
 Если PostgreSQL недоступен, сервер все равно поднимет фронтенд в preview-режиме, а меню покажет локальные fallback-данные.
 
+## GitHub Pages
+
+Для показа клиенту настроена статическая публикация папки `client` через GitHub Actions.
+После push в `main` сайт будет доступен по адресу:
+
+```text
+https://said-go.github.io/ChamBu/
+```
+
+На GitHub Pages работает публичная демо-витрина меню на локальных данных. Админка, сохранение блюд и загрузка фото требуют Go-сервер и PostgreSQL.
+
 ## Docker
 
 ```powershell

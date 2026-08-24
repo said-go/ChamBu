@@ -14,15 +14,15 @@ const imageThemes = {
 };
 
 const localDishImages = {
-  'pancake-honey': '/assets/dishes/dish-honey.jpg',
-  'pancake-chicken': '/assets/dishes/dish-pancake-stack.jpg',
-  'pancake-berry': '/assets/dishes/dish-honey.jpg',
-  'omelet-cheese': '/assets/dishes/dish-omelet.jpg',
-  syrniki: '/assets/dishes/dish-syrniki.jpg',
-  'croissant-salmon': '/assets/dishes/dish-croissant.jpg',
-  'raf-cardamom': '/assets/dishes/dish-coffee.jpg',
-  'mountain-tea': '/assets/dishes/dish-tea.jpg',
-  'berry-lemonade': '/assets/dishes/dish-oatmeal.jpg',
+  'pancake-honey': assetURL('assets/dishes/dish-honey.jpg'),
+  'pancake-chicken': assetURL('assets/dishes/dish-pancake-stack.jpg'),
+  'pancake-berry': assetURL('assets/dishes/dish-honey.jpg'),
+  'omelet-cheese': assetURL('assets/dishes/dish-omelet.jpg'),
+  syrniki: assetURL('assets/dishes/dish-syrniki.jpg'),
+  'croissant-salmon': assetURL('assets/dishes/dish-croissant.jpg'),
+  'raf-cardamom': assetURL('assets/dishes/dish-coffee.jpg'),
+  'mountain-tea': assetURL('assets/dishes/dish-tea.jpg'),
+  'berry-lemonade': assetURL('assets/dishes/dish-oatmeal.jpg'),
 };
 
 export function renderMenu(state) {
@@ -205,8 +205,13 @@ function safeImageURL(value, itemId = '') {
   if (url.startsWith('/assets/dishes/blini-') || url.endsWith('/assets/dishes/citrus.jpg')) {
     return localDishImages[itemId] || '';
   }
-  if (url.startsWith('https://') || url.startsWith('/assets/')) return url;
+  if (url.startsWith('/assets/')) return assetURL(url.slice(1));
+  if (url.startsWith('https://')) return url;
   return '';
+}
+
+function assetURL(path) {
+  return new URL(`../../${path}`, import.meta.url).href;
 }
 
 function cartBar(state) {

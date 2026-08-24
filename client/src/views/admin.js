@@ -124,6 +124,7 @@ function categoryName(id) {
 function safeImageURL(value) {
   const url = String(value || '').trim();
   if (!url) return '';
-  if (url.startsWith('https://') || url.startsWith('/assets/')) return url;
+  if (url.startsWith('/assets/')) return new URL(`../../${url.slice(1)}`, import.meta.url).href;
+  if (url.startsWith('https://')) return url;
   return '';
 }

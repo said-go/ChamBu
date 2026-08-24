@@ -1,6 +1,7 @@
 import { fallbackCatalog } from './fallback.js';
 
 export function createStore({ api, onChange }) {
+  const isStaticPreview = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
   const state = {
     catalog: fallbackCatalog,
     activeCategory: 'all',
@@ -30,6 +31,13 @@ export function createStore({ api, onChange }) {
     },
 
     async loadCatalog() {
+      if (isStaticPreview) {
+        state.catalog = fallbackCatalog;
+        state.loading = false;
+        emit();
+        return;
+      }
+
       try {
         await refresh();
       } catch {
@@ -68,6 +76,12 @@ export function createStore({ api, onChange }) {
     },
 
     async login({ email, password }) {
+      if (isStaticPreview) {
+        state.notice = 'На GitHub Pages доступна только демо-витрина. Админка работает вместе с Go-сервером.';
+        emit();
+        return;
+      }
+
       try {
         state.saving = true;
         state.notice = '';
@@ -93,6 +107,12 @@ export function createStore({ api, onChange }) {
     },
 
     async saveItem(item) {
+      if (isStaticPreview) {
+        state.notice = 'На GitHub Pages нельзя сохранять меню. Запустите Go-сервер для админки.';
+        emit();
+        return;
+      }
+
       try {
         state.saving = true;
         state.notice = '';
@@ -110,6 +130,12 @@ export function createStore({ api, onChange }) {
     },
 
     async deleteItem(id) {
+      if (isStaticPreview) {
+        state.notice = 'На GitHub Pages нельзя удалять позиции. Запустите Go-сервер для админки.';
+        emit();
+        return;
+      }
+
       try {
         state.deletingId = id;
         state.notice = '';
