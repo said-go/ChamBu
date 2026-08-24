@@ -1,4 +1,4 @@
-name: Публикация GitHub Pages
+name: Обновление GitHub Pages
 
 on:
   push:
@@ -7,9 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: pages
@@ -17,22 +15,29 @@ concurrency:
 
 jobs:
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Забрать код
         uses: actions/checkout@v4
-
-      - name: Подготовить Pages
-        uses: actions/configure-pages@v5
-
-      - name: Загрузить статический сайт
-        uses: actions/upload-pages-artifact@v3
         with:
-          path: client
+          fetch-depth: 0
 
-      - name: Опубликовать
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Подготовить файлы сайта
+        run: |
+          rm -rf pages-dist
+          mkdir pages-dist
+          cp -R client/. pages-dist/
+
+      - name: Опубликовать в gh-pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin gh-pages || true
+          git switch --orphan gh-pages-publish
+          find . -mindepth 1 -maxdepth 1 ! -name pages-dist ! -name .git -exec rm -rf {} +
+          cp -R pages-dist/. .
+          rm -rf pages-dist
+          touch .nojekyll
+          git add -A
+          git commit -m "Обновить GitHub Pages" || exit 0
+          git push --force origin gh-pages-publish:gh-pages
