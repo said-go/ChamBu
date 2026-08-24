@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"errors"
 	"mime/multipart"
 	"strings"
 
@@ -18,6 +19,9 @@ func NewCloudinaryStorage(
 	apiKey string,
 	apiSecret string,
 ) (*CloudinaryStorage, error) {
+	if cloudName == "" || apiKey == "" || apiSecret == "" {
+		return nil, errors.New("cloudinary credentials are missing")
+	}
 
 	cld, err := cloudinary.NewFromParams(
 		cloudName,

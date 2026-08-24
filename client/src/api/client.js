@@ -39,11 +39,22 @@ export class ApiClient {
     if (options.body && !isFormData) headers['Content-Type'] = 'application/json';
     if (options.token) headers.Authorization = `Bearer ${options.token}`;
 
-    const response = await fetch(url, {
-      method: options.method || 'GET',
-      headers,
-      body: isFormData ? options.body : options.body ? JSON.stringify(options.body) : undefined,
-    });
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), options.timeout || 12000);
+
+    let response;
+    try {
+      response = await fetch(url, {
+        method: options.method || 'GET',
+        headers,
+        body: isFormData ? options.body : options.body ? JSON.stringify(options.body) : undefined,
+        signal: controller.signal,
+      });
+    } catch (error) {
+      throw new Error(error.name === 'AbortError' ? 'Сервер отвечает слишком долго.' : 'Не удалось связаться с сервером.');
+    } finally {
+      window.clearTimeout(timeout);
+    }
 
     if (response.status === 204) return null;
 

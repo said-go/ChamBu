@@ -22,7 +22,6 @@ function bindSharedEvents() {
   document.querySelectorAll('[data-route]').forEach((link) => {
     link.addEventListener('click', () => {
       window.location.hash = link.dataset.route;
-      render();
     });
   });
 }
@@ -67,4 +66,5 @@ function bindAdminEvents() {
 }
 
 window.addEventListener('hashchange', render);
+render();
 store.loadCatalog();

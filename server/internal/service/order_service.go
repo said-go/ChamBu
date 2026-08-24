@@ -1,11 +1,14 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 
 	"chambu/server/internal/models"
 	"chambu/server/internal/repository"
 )
+
+var ErrInvalidOrder = errors.New("invalid order")
 
 type OrderService interface {
 	List(page, limit int) ([]models.Order, int64, error)
@@ -41,6 +44,12 @@ func (s *orderService) Get(id uint) (*models.Order, error) {
 }
 
 func (s *orderService) Create(input *models.OrderCreate) (*models.Order, error) {
+	if len(input.Items) == 0 {
+		return nil, fmt.Errorf("%w: order must contain at least one item", ErrInvalidOrder)
+	}
+	if !validContactMethod(input.ContactMethod) {
+		return nil, fmt.Errorf("%w: invalid contact method", ErrInvalidOrder)
+	}
 
 	order := buildOrder(input)
 
@@ -97,6 +106,9 @@ func (s *orderService) buildOrderItems(
 	)
 
 	for _, in := range inputItems {
+		if in.Quantity == 0 {
+			return nil, 0, fmt.Errorf("%w: item quantity must be greater than zero", ErrInvalidOrder)
+		}
 
 		item, err := s.menuRepo.GetByID(in.MenuItemID)
 		if err != nil {
@@ -120,6 +132,10 @@ func (s *orderService) buildOrderItems(
 	}
 
 	return items, total, nil
+}
+
+func validContactMethod(value uint) bool {
+	return value == models.ContactTelegram || value == models.ContactInstagram || value == models.ContactPhone
 }
 
 func (s *orderService) Delete(id uint) error {

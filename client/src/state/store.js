@@ -9,11 +9,13 @@ export function createStore({ api, onChange }) {
     adminToken: localStorage.getItem('chambu.jwt') || '',
     notice: '',
     loading: true,
+    saving: false,
+    deletingId: '',
   };
 
   const emit = () => onChange();
   const refresh = async () => {
-    state.catalog = await api.menu();
+    state.catalog = normalizeCatalog(await api.menu());
     state.loading = false;
     emit();
   };
@@ -56,13 +58,18 @@ export function createStore({ api, onChange }) {
 
     async login({ email, password }) {
       try {
+        state.saving = true;
+        state.notice = '';
+        emit();
+
         const response = await api.login(email, password);
         state.adminToken = response.token;
         localStorage.setItem('chambu.jwt', response.token);
         state.notice = '';
-        emit();
       } catch (error) {
         state.notice = error.message;
+      } finally {
+        state.saving = false;
         emit();
       }
     },
@@ -76,24 +83,48 @@ export function createStore({ api, onChange }) {
 
     async saveItem(item) {
       try {
+        state.saving = true;
+        state.notice = '';
+        emit();
+
         await api.saveItem(state.adminToken, item);
         state.notice = 'Позиция сохранена.';
         await refresh();
       } catch (error) {
         state.notice = error.message;
+      } finally {
+        state.saving = false;
         emit();
       }
     },
 
     async deleteItem(id) {
       try {
+        state.deletingId = id;
+        state.notice = '';
+        emit();
+
         await api.deleteItem(state.adminToken, id);
         state.notice = 'Позиция удалена.';
         await refresh();
       } catch (error) {
         state.notice = error.message;
+      } finally {
+        state.deletingId = '';
         emit();
       }
     },
+  };
+}
+
+function normalizeCatalog(catalog) {
+  return {
+    brand: {
+      ...fallbackCatalog.brand,
+      ...(catalog?.brand || {}),
+      highlights: Array.isArray(catalog?.brand?.highlights) ? catalog.brand.highlights : fallbackCatalog.brand.highlights,
+    },
+    categories: Array.isArray(catalog?.categories) ? catalog.categories : [],
+    items: Array.isArray(catalog?.items) ? catalog.items : [],
   };
 }

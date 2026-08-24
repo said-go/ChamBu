@@ -1,11 +1,21 @@
 export function digits(value) {
-  return value.replace(/[^\d+]/g, '');
+  return String(value || '').replace(/[^\d+]/g, '');
 }
 
 export function escapeAttr(value = '') {
-  return String(value).replaceAll('"', '&quot;');
+  return escapeHTML(value).replaceAll('"', '&quot;');
+}
+
+export function escapeHTML(value = '') {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
 }
 
 export function formatPrice(value) {
-  return new Intl.NumberFormat('ru-RU').format(value) + ' ₽';
+  const price = Number(value || 0);
+  return `${new Intl.NumberFormat('ru-RU').format(price)} ₽`;
 }

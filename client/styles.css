@@ -36,6 +36,17 @@ input {
   font: inherit;
 }
 
+button:disabled,
+.button:disabled {
+  cursor: default;
+  opacity: 0.62;
+}
+
+:focus-visible {
+  outline: 3px solid rgba(47, 111, 93, 0.34);
+  outline-offset: 3px;
+}
+
 .hero {
   position: relative;
   min-height: 86vh;
@@ -384,10 +395,24 @@ input {
   color: var(--muted);
 }
 
+.skeleton {
+  min-height: 184px;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.72), transparent),
+    #efe3d2;
+  background-size: 220% 100%;
+  animation: skeleton-shimmer 1.2s ease-in-out infinite;
+}
+
+.skeleton span {
+  opacity: 0;
+}
+
 .cart-bar {
   position: fixed;
   left: 50%;
-  bottom: 18px;
+  bottom: max(18px, env(safe-area-inset-bottom));
   z-index: 10;
   display: flex;
   width: min(720px, calc(100% - 28px));
@@ -403,6 +428,16 @@ input {
   color: #fffaf2;
   box-shadow: var(--shadow);
   backdrop-filter: blur(14px);
+}
+
+@keyframes skeleton-shimmer {
+  from {
+    background-position: 180% 0;
+  }
+
+  to {
+    background-position: -40% 0;
+  }
 }
 
 .cart-bar div {
@@ -960,7 +995,7 @@ input {
   }
 
   .cart-bar {
-    bottom: 10px;
+    bottom: max(10px, env(safe-area-inset-bottom));
   }
 
   .hero__actions .button {
@@ -1025,5 +1060,16 @@ input {
   .admin-dish-row__image {
     width: 48px;
     height: 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }

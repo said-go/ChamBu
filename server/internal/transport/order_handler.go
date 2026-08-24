@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -46,8 +47,14 @@ func (h *OrderHandler) Create(c *gin.Context) {
 
 	order, err := h.service.Create(&req)
 	if err != nil {
+		if errors.Is(err, service.ErrInvalidOrder) {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
+			"error": "internal server error",
 		})
 		return
 	}

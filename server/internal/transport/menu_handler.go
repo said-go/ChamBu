@@ -99,12 +99,13 @@ func (h *MenuHandler) Create(c *gin.Context) {
 }
 
 func (h *MenuHandler) GetByID(c *gin.Context) {
-	id, ok := uintParam(c, "id")
-	if !ok {
+	slug := strings.TrimSpace(c.Param("id"))
+	if slug == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
 
-	item, err := h.service.GetByID(id)
+	item, err := h.service.GetBySlug(slug)
 	if err != nil {
 		if errors.Is(err, service.ErrMenuItemNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "menu item not found"})

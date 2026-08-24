@@ -1,4 +1,4 @@
-import { digits, escapeAttr, formatPrice } from '../utils/format.js';
+import { digits, escapeAttr, escapeHTML, formatPrice } from '../utils/format.js';
 
 const imageThemes = {
   citrus: ['#d97822', '#f3dfb2'],
@@ -19,38 +19,48 @@ const imageThemes = {
 
 export function renderMenu(state) {
   const { brand } = state.catalog;
+  const safeBrand = {
+    name: escapeHTML(brand.name),
+    subtitle: escapeHTML(brand.subtitle),
+    description: escapeHTML(brand.description),
+    phone: escapeHTML(brand.phone),
+    address: escapeHTML(brand.address),
+    hours: escapeHTML(brand.hours),
+    phoneHref: digits(brand.phone),
+  };
+
   return `
     <header class="hero">
       <nav class="topbar">
         <a class="brand-mark" href="#menu" aria-label="ЧамБу меню">ЧБ</a>
         <div class="topbar__meta">
-          <span>${brand.hours}</span>
-          <a href="tel:${digits(brand.phone)}">${brand.phone}</a>
+          <span>${safeBrand.hours}</span>
+          <a href="tel:${safeBrand.phoneHref}">${safeBrand.phone}</a>
         </div>
       </nav>
       <section class="hero__content">
-        <p class="eyebrow">${brand.subtitle}</p>
-        <h1>${brand.name}</h1>
-        <p>${brand.description}</p>
+        <p class="eyebrow">${safeBrand.subtitle}</p>
+        <h1>${safeBrand.name}</h1>
+        <p>${safeBrand.description}</p>
         <div class="hero__actions">
           <a class="button button--primary" href="#menu">Открыть меню</a>
-          <a class="button button--ghost" href="tel:${digits(brand.phone)}">Позвонить</a>
+          <a class="button button--ghost" href="tel:${safeBrand.phoneHref}">Позвонить</a>
         </div>
       </section>
     </header>
 
     <main>
-      ${state.notice ? `<p class="notice">${state.notice}</p>` : ''}
+      ${state.notice ? `<p class="notice">${escapeHTML(state.notice)}</p>` : ''}
       <section class="info-strip" aria-label="Информация">
-        ${brand.highlights.map((item) => `<span>${item}</span>`).join('')}
-        <span>${brand.address}</span>
+        ${(brand.highlights || []).map((item) => `<span>${escapeHTML(item)}</span>`).join('')}
+        <span>${safeBrand.address}</span>
       </section>
 
       <section class="menu-shell" id="menu">
         <aside class="menu-sidebar">
           <div>
             <p class="eyebrow">Меню</p>
-            <h2>Выберите настроение</h2>
+            <h2>Выберите то, что хочется сейчас</h2>
           </div>
           <label class="search">
             <span>Поиск</span>
@@ -63,7 +73,7 @@ export function renderMenu(state) {
         </aside>
 
         <section class="menu-list" aria-live="polite">
-          ${filteredItems(state).map((item) => itemCard(item, state.cart)).join('') || '<p class="empty">Ничего не нашли. Попробуйте другой запрос.</p>'}
+          ${menuContent(state)}
         </section>
       </section>
     </main>
@@ -76,63 +86,64 @@ export function renderMenu(state) {
   `;
 }
 
+function menuContent(state) {
+  if (state.loading) {
+    return Array.from({ length: 4 }, (_, index) => `<article class="menu-card skeleton" aria-hidden="true"><span>${index}</span></article>`).join('');
+  }
+
+  const items = filteredItems(state);
+  if (!items.length) {
+    return '<p class="empty">Ничего не нашли. Попробуйте другой запрос или категорию.</p>';
+  }
+
+  return items.map((item) => itemCard(item, state.cart)).join('');
+}
+
 function categoryButton(category, activeCategory) {
   const isActive = activeCategory === category.id;
-  return `<button class="tab ${isActive ? 'is-active' : ''}" data-category="${category.id}">${category.name}</button>`;
+  return `<button class="tab ${isActive ? 'is-active' : ''}" data-category="${escapeAttr(category.id)}">${escapeHTML(category.name)}</button>`;
 }
 
 function itemCard(item, cart) {
   const qty = cart.get(item.id) || 0;
   const colors = imageThemes[item.image] || ['#314f45', '#d7ad6a'];
-  const imageUrl = item.imageUrl || dishImageBySlug(item.id) || dishImageByCategory(item.categoryId);
+  const imageUrl = safeImageURL(item.imageUrl);
   const imageStyle = imageUrl
-    ? `background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.18)), url('${imageUrl}')`
+    ? `background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.18)), url('${escapeAttr(imageUrl)}')`
     : `--c1: ${colors[0]}; --c2: ${colors[1]}`;
+  const name = escapeHTML(item.name);
+  const description = escapeHTML(item.description);
+
   return `
     <article class="menu-card">
-      <div class="dish-art ${imageUrl ? 'dish-art--photo' : ''}" style="${imageStyle}">
-        ${imageUrl ? '' : `<span>${item.name.slice(0, 1)}</span>`}
+      <div class="dish-art ${imageUrl ? 'dish-art--photo' : ''}" style="${imageStyle}" role="img" aria-label="${escapeAttr(item.name)}">
+        ${imageUrl ? '' : `<span>${name.slice(0, 1)}</span>`}
       </div>
       <div class="menu-card__body">
         <div class="menu-card__title">
-          <h3>${item.name}</h3>
+          <h3>${name}</h3>
           <strong>${formatPrice(item.price)}</strong>
         </div>
-        <p>${item.description}</p>
+        <p>${description}</p>
         <div class="menu-card__meta">
-          <span>${item.weight}</span>
-          ${item.badges.map((badge) => `<span>${badge}</span>`).join('')}
+          ${item.weight ? `<span>${escapeHTML(item.weight)}</span>` : ''}
+          ${(item.badges || []).map((badge) => `<span>${escapeHTML(badge)}</span>`).join('')}
         </div>
       </div>
-      <div class="stepper" aria-label="Количество ${item.name}">
-        <button data-dec="${item.id}" ${qty === 0 ? 'disabled' : ''}>-</button>
+      <div class="stepper" aria-label="Количество ${escapeAttr(item.name)}">
+        <button data-dec="${escapeAttr(item.id)}" aria-label="Убрать ${escapeAttr(item.name)}" ${qty === 0 ? 'disabled' : ''}>-</button>
         <span>${qty}</span>
-        <button data-inc="${item.id}">+</button>
+        <button data-inc="${escapeAttr(item.id)}" aria-label="Добавить ${escapeAttr(item.name)}">+</button>
       </div>
     </article>
   `;
 }
 
-function dishImageBySlug(slug) {
-  return {
-    'pancake-honey': '/assets/dishes/blini-folded.jpg',
-    'pancake-chicken': '/assets/dishes/blini-stack.jpg',
-    'pancake-berry': '/assets/dishes/blini-berries.jpg',
-    'omelet-cheese': '/assets/dishes/blini-round.jpg',
-    syrniki: '/assets/dishes/blini-berries.jpg',
-    'croissant-salmon': '/assets/dishes/blini-folded.jpg',
-    'raf-cardamom': '/assets/dishes/citrus.jpg',
-    'mountain-tea': '/assets/dishes/citrus.jpg',
-    'berry-lemonade': '/assets/dishes/citrus.jpg',
-  }[slug];
-}
-
-function dishImageByCategory(categoryId) {
-  return {
-    pancakes: '/assets/dishes/blini-round.jpg',
-    breakfast: '/assets/dishes/blini-folded.jpg',
-    drinks: '/assets/dishes/citrus.jpg',
-  }[categoryId];
+function safeImageURL(value) {
+  const url = String(value || '').trim();
+  if (!url) return '';
+  if (url.startsWith('https://') || url.startsWith('/assets/')) return url;
+  return '';
 }
 
 function cartBar(state) {

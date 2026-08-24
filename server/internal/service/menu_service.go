@@ -19,7 +19,7 @@ type MenuService interface {
 	GetAll(filter models.MenuFilter, page int, limit int) ([]models.MenuItemDTO, int64, error)
 	UploadImage(file *multipart.FileHeader) (string, error)
 	Create(input *models.MenuItemCreate, imageURL string) (*models.MenuItemDTO, error)
-	GetByID(id uint) (*models.MenuItemDTO, error)
+	GetBySlug(slug string) (*models.MenuItemDTO, error)
 	Update(id uint, input *models.MenuItemUpdate) (*models.MenuItemDTO, error)
 	Delete(slug string) error
 	SaveCategory(input *models.MenuCategoryInput) (*models.MenuCategoryDTO, error)
@@ -85,8 +85,8 @@ func (s *menuService) Create(input *models.MenuItemCreate, imageURL string) (*mo
 	return &dto, nil
 }
 
-func (s *menuService) GetByID(id uint) (*models.MenuItemDTO, error) {
-	item, err := s.repo.GetByID(id)
+func (s *menuService) GetBySlug(slug string) (*models.MenuItemDTO, error) {
+	item, err := s.repo.GetBySlug(slug)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, ErrMenuItemNotFound

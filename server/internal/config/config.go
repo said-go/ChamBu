@@ -20,11 +20,9 @@ type Config struct {
 	DBHost      string
 	DBName      string
 	DBPort      string
-	Storage     string
 	CloudName   string
 	CloudKey    string
 	CloudSecret string
-	YandexToken string
 }
 
 func FromEnv() Config {
@@ -39,11 +37,9 @@ func FromEnv() Config {
 		DBHost:      env("DB_HOST", "localhost"),
 		DBName:      env("DB_NAME", "chambu"),
 		DBPort:      env("DB_PORT", "5432"),
-		Storage:     env("STORAGE_DRIVER", "yandex"),
 		CloudName:   env("CLOUDINARY_CLOUD_NAME", env("CLOUD_NAME", "")),
 		CloudKey:    env("CLOUDINARY_API_KEY", env("API_KEY", "")),
 		CloudSecret: env("CLOUDINARY_API_SECRET", env("API_SECRET", "")),
-		YandexToken: env("YANDEX_DISK_TOKEN", ""),
 	}
 }
 
