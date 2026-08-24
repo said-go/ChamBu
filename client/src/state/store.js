@@ -11,6 +11,7 @@ export function createStore({ api, onChange }) {
     loading: true,
     saving: false,
     deletingId: '',
+    selectedItemId: '',
   };
 
   const emit = () => onChange();
@@ -53,6 +54,16 @@ export function createStore({ api, onChange }) {
       const qty = Math.max(0, (state.cart.get(id) || 0) + delta);
       if (qty === 0) state.cart.delete(id);
       else state.cart.set(id, qty);
+      emit();
+    },
+
+    openItem(id) {
+      state.selectedItemId = id;
+      emit();
+    },
+
+    closeItem() {
+      state.selectedItemId = '';
       emit();
     },
 

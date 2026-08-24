@@ -82,6 +82,7 @@ export function renderMenu(state) {
       <button class="admin-footer-link" data-route="admin">Для администратора</button>
     </footer>
 
+    ${selectedItemModal(state)}
     ${cartCount(state.cart) ? cartBar(state) : ''}
   `;
 }
@@ -115,8 +116,8 @@ function itemCard(item, cart) {
   const description = escapeHTML(item.description);
 
   return `
-    <article class="menu-card">
-      <div class="dish-art ${imageUrl ? 'dish-art--photo' : ''}" style="${imageStyle}" role="img" aria-label="${escapeAttr(item.name)}">
+    <article class="menu-card" data-open-item="${escapeAttr(item.id)}" role="button" tabindex="0" aria-label="Открыть ${escapeAttr(item.name)}">
+      <div class="dish-art ${imageUrl ? 'dish-art--photo' : ''}" style="${imageStyle}" aria-hidden="true">
         ${imageUrl ? '' : `<span>${name.slice(0, 1)}</span>`}
       </div>
       <div class="menu-card__body">
@@ -129,6 +130,7 @@ function itemCard(item, cart) {
           ${item.weight ? `<span>${escapeHTML(item.weight)}</span>` : ''}
           ${(item.badges || []).map((badge) => `<span>${escapeHTML(badge)}</span>`).join('')}
         </div>
+        <span class="menu-card__hint">Подробнее</span>
       </div>
       <div class="stepper" aria-label="Количество ${escapeAttr(item.name)}">
         <button data-dec="${escapeAttr(item.id)}" aria-label="Убрать ${escapeAttr(item.name)}" ${qty === 0 ? 'disabled' : ''}>-</button>
@@ -136,6 +138,48 @@ function itemCard(item, cart) {
         <button data-inc="${escapeAttr(item.id)}" aria-label="Добавить ${escapeAttr(item.name)}">+</button>
       </div>
     </article>
+  `;
+}
+
+function selectedItemModal(state) {
+  const item = state.catalog.items.find((entry) => entry.id === state.selectedItemId);
+  if (!item) return '';
+
+  const qty = state.cart.get(item.id) || 0;
+  const colors = imageThemes[item.image] || ['#314f45', '#d7ad6a'];
+  const imageUrl = safeImageURL(item.imageUrl);
+  const imageStyle = imageUrl
+    ? `background-image: linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.22)), url('${escapeAttr(imageUrl)}')`
+    : `--c1: ${colors[0]}; --c2: ${colors[1]}`;
+
+  return `
+    <div class="item-modal" data-item-modal role="dialog" aria-modal="true" aria-label="${escapeAttr(item.name)}">
+      <article class="item-sheet">
+        <button class="item-sheet__close" data-close-item aria-label="Закрыть">×</button>
+        <div class="item-sheet__image ${imageUrl ? 'dish-art--photo' : ''}" style="${imageStyle}">
+          ${imageUrl ? '' : `<span>${escapeHTML(item.name).slice(0, 1)}</span>`}
+        </div>
+        <div class="item-sheet__body">
+          <div class="item-sheet__title">
+            <h2>${escapeHTML(item.name)}</h2>
+            <strong>${formatPrice(item.price)}</strong>
+          </div>
+          <p>${escapeHTML(item.description)}</p>
+          <div class="menu-card__meta">
+            ${item.weight ? `<span>${escapeHTML(item.weight)}</span>` : ''}
+            ${(item.badges || []).map((badge) => `<span>${escapeHTML(badge)}</span>`).join('')}
+          </div>
+          <div class="item-sheet__actions">
+            <div class="stepper stepper--large" aria-label="Количество ${escapeAttr(item.name)}">
+              <button data-dec="${escapeAttr(item.id)}" aria-label="Убрать ${escapeAttr(item.name)}" ${qty === 0 ? 'disabled' : ''}>-</button>
+              <span>${qty}</span>
+              <button data-inc="${escapeAttr(item.id)}" aria-label="Добавить ${escapeAttr(item.name)}">+</button>
+            </div>
+            <button class="button button--primary" data-inc="${escapeAttr(item.id)}">Добавить</button>
+          </div>
+        </div>
+      </article>
+    </div>
   `;
 }
 

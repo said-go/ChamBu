@@ -27,6 +27,26 @@ function bindSharedEvents() {
 }
 
 function bindMenuEvents() {
+  document.querySelectorAll('[data-open-item]').forEach((card) => {
+    card.addEventListener('click', (event) => {
+      if (event.target.closest('.stepper')) return;
+      store.openItem(card.dataset.openItem);
+    });
+    card.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      store.openItem(card.dataset.openItem);
+    });
+  });
+
+  document.querySelectorAll('[data-close-item]').forEach((button) => {
+    button.addEventListener('click', () => store.closeItem());
+  });
+
+  document.querySelector('[data-item-modal]')?.addEventListener('click', (event) => {
+    if (event.target === event.currentTarget) store.closeItem();
+  });
+
   document.querySelectorAll('[data-category]').forEach((button) => {
     button.addEventListener('click', () => store.setCategory(button.dataset.category));
   });
@@ -66,5 +86,8 @@ function bindAdminEvents() {
 }
 
 window.addEventListener('hashchange', render);
+window.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') store.closeItem();
+});
 render();
 store.loadCatalog();
