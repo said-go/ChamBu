@@ -2,75 +2,78 @@ import { digits, escapeAttr, escapeHTML, formatPrice } from '../utils/format.js'
 
 const imageThemes = {
   citrus: ['#d97822', '#f3dfb2'],
-  'pancake-folded': ['#b47731', '#f2d39d'],
-  'pancake-stack': ['#8f5b2d', '#e6bd75'],
-  'pancake-berries': ['#8f4f36', '#d99b8e'],
-  coffee: ['#4a2b1b', '#c58b54'],
-  latte: ['#6b4a2f', '#ead2a5'],
-  americano: ['#2d1b14', '#8f5c35'],
-  tea: ['#7d2d1c', '#e4a333'],
-  lemonade: ['#cf4d5a', '#ffd166'],
-  breakfast: ['#266457', '#f1bc5b'],
-  croissant: ['#b66a2c', '#f3c27a'],
-  syrniki: ['#d09a3c', '#f7e7b8'],
-  dessert: ['#55784d', '#e8c08a'],
-  tiramisu: ['#513123', '#d9b78f'],
+  'pancake-folded': ['#c45e35', '#f3c07a'],
+  'pancake-stack': ['#d7a646', '#f8f3ea'],
+  'pancake-berries': ['#9f4636', '#f0d1c8'],
+  coffee: ['#4a2b1b', '#d7a646'],
+  tea: ['#7f3a1c', '#efb84c'],
+  lemonade: ['#c45e35', '#f3d48d'],
+  breakfast: ['#174f43', '#e7bc65'],
+  croissant: ['#b66a2c', '#f0c47d'],
+  syrniki: ['#d7a646', '#f8f3ea'],
+};
+
+const localDishImages = {
+  'pancake-honey': '/assets/dishes/dish-honey.jpg',
+  'pancake-chicken': '/assets/dishes/dish-pancake-stack.jpg',
+  'pancake-berry': '/assets/dishes/dish-honey.jpg',
+  'omelet-cheese': '/assets/dishes/dish-omelet.jpg',
+  syrniki: '/assets/dishes/dish-syrniki.jpg',
+  'croissant-salmon': '/assets/dishes/dish-croissant.jpg',
+  'raf-cardamom': '/assets/dishes/dish-coffee.jpg',
+  'mountain-tea': '/assets/dishes/dish-tea.jpg',
+  'berry-lemonade': '/assets/dishes/dish-oatmeal.jpg',
 };
 
 export function renderMenu(state) {
   const { brand } = state.catalog;
-  const safeBrand = {
-    name: escapeHTML(brand.name),
-    subtitle: escapeHTML(brand.subtitle),
-    description: escapeHTML(brand.description),
-    phone: escapeHTML(brand.phone),
-    address: escapeHTML(brand.address),
-    hours: escapeHTML(brand.hours),
-    phoneHref: digits(brand.phone),
-  };
+  const phoneHref = digits(brand.phone);
 
   return `
-    <header class="hero">
-      <nav class="topbar">
-        <a class="brand-mark" href="#menu" aria-label="ЧамБу меню">ЧБ</a>
-        <div class="topbar__meta">
-          <span>${safeBrand.hours}</span>
-          <a href="tel:${safeBrand.phoneHref}">${safeBrand.phone}</a>
-        </div>
-      </nav>
-      <section class="hero__content">
-        <p class="eyebrow">${safeBrand.subtitle}</p>
-        <h1>${safeBrand.name}</h1>
-        <p>${safeBrand.description}</p>
-        <div class="hero__actions">
-          <a class="button button--primary" href="#menu">Открыть меню</a>
-          <a class="button button--ghost" href="tel:${safeBrand.phoneHref}">Позвонить</a>
-        </div>
-      </section>
-    </header>
+    <main class="landing-shell">
+      <section class="hero-card">
+        <div class="hero-visual">
+          <nav class="topbar">
+            <a class="brand-mark" href="#menu" aria-label="ЧамБу меню">ЧБ</a>
+            <div class="topbar__meta">
+              <span>${escapeHTML(brand.hours)}</span>
+              <a href="tel:${phoneHref}">${escapeHTML(brand.phone)}</a>
+            </div>
+          </nav>
 
-    <main>
-      ${state.notice ? `<p class="notice">${escapeHTML(state.notice)}</p>` : ''}
-      <section class="info-strip" aria-label="Информация">
-        ${(brand.highlights || []).map((item) => `<span>${escapeHTML(item)}</span>`).join('')}
-        <span>${safeBrand.address}</span>
+          <div class="hero__content">
+            <p class="eyebrow">${escapeHTML(brand.subtitle)}</p>
+            <h1>${escapeHTML(brand.name)}</h1>
+            <p>${escapeHTML(brand.description)}</p>
+            <div class="hero__actions">
+              <a class="button button--primary" href="#menu">Открыть меню</a>
+              <a class="button button--glass" href="tel:${phoneHref}">Позвонить</a>
+            </div>
+          </div>
+        </div>
+
+        <section class="info-strip" aria-label="Информация">
+          ${(brand.highlights || []).map((item) => infoRow(item, 'spark')).join('')}
+          ${infoRow(brand.address, 'pin')}
+        </section>
       </section>
 
-      <section class="menu-shell" id="menu">
-        <aside class="menu-sidebar">
-          <div>
-            <p class="eyebrow">Меню</p>
-            <h2>Выберите то, что хочется сейчас</h2>
-          </div>
-          <label class="search">
-            <span>Поиск</span>
-            <input data-search type="search" placeholder="блин, сырники, чай" value="${escapeAttr(state.query)}" />
-          </label>
-          <div class="tabs">
-            ${categoryButton({ id: 'all', name: 'Все' }, state.activeCategory)}
-            ${state.catalog.categories.map((category) => categoryButton(category, state.activeCategory)).join('')}
-          </div>
-        </aside>
+      <section class="menu-panel" id="menu">
+        ${state.notice ? `<p class="notice">${escapeHTML(state.notice)}</p>` : ''}
+        <div class="menu-head">
+          <p class="eyebrow">Меню</p>
+          <h2>Выберите то, что хочется сейчас</h2>
+        </div>
+
+        <label class="search">
+          <span>Поиск</span>
+          <input data-search type="search" placeholder="блин, сырники, чай" value="${escapeAttr(state.query)}" />
+        </label>
+
+        <div class="tabs" aria-label="Категории меню">
+          ${categoryButton({ id: 'all', name: 'Все' }, state.activeCategory)}
+          ${state.catalog.categories.map((category) => categoryButton(category, state.activeCategory)).join('')}
+        </div>
 
         <section class="menu-list" aria-live="polite">
           ${menuContent(state)}
@@ -87,9 +90,18 @@ export function renderMenu(state) {
   `;
 }
 
+function infoRow(text, icon) {
+  return `
+    <div class="info-row">
+      <span class="info-row__icon">${icon === 'pin' ? '⌖' : '✦'}</span>
+      <span>${escapeHTML(text)}</span>
+    </div>
+  `;
+}
+
 function menuContent(state) {
   if (state.loading) {
-    return Array.from({ length: 4 }, (_, index) => `<article class="menu-card skeleton" aria-hidden="true"><span>${index}</span></article>`).join('');
+    return Array.from({ length: 6 }, (_, index) => `<article class="menu-card skeleton" aria-hidden="true"><span>${index}</span></article>`).join('');
   }
 
   const items = filteredItems(state);
@@ -107,35 +119,27 @@ function categoryButton(category, activeCategory) {
 
 function itemCard(item, cart) {
   const qty = cart.get(item.id) || 0;
-  const colors = imageThemes[item.image] || ['#314f45', '#d7ad6a'];
-  const imageUrl = safeImageURL(item.imageUrl);
-  const imageStyle = imageUrl
-    ? `background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.18)), url('${escapeAttr(imageUrl)}')`
-    : `--c1: ${colors[0]}; --c2: ${colors[1]}`;
+  const image = dishImage(item);
   const name = escapeHTML(item.name);
-  const description = escapeHTML(item.description);
 
   return `
     <article class="menu-card" data-open-item="${escapeAttr(item.id)}" role="button" tabindex="0" aria-label="Открыть ${escapeAttr(item.name)}">
-      <div class="dish-art ${imageUrl ? 'dish-art--photo' : ''}" style="${imageStyle}" aria-hidden="true">
-        ${imageUrl ? '' : `<span>${name.slice(0, 1)}</span>`}
-      </div>
+      ${dishMedia(item, image, 'dish-art')}
       <div class="menu-card__body">
         <div class="menu-card__title">
           <h3>${name}</h3>
           <strong>${formatPrice(item.price)}</strong>
         </div>
-        <p>${description}</p>
+        <p>${escapeHTML(item.description)}</p>
         <div class="menu-card__meta">
           ${item.weight ? `<span>${escapeHTML(item.weight)}</span>` : ''}
           ${(item.badges || []).map((badge) => `<span>${escapeHTML(badge)}</span>`).join('')}
         </div>
-        <span class="menu-card__hint">Подробнее</span>
-      </div>
-      <div class="stepper" aria-label="Количество ${escapeAttr(item.name)}">
-        <button data-dec="${escapeAttr(item.id)}" aria-label="Убрать ${escapeAttr(item.name)}" ${qty === 0 ? 'disabled' : ''}>-</button>
-        <span>${qty}</span>
-        <button data-inc="${escapeAttr(item.id)}" aria-label="Добавить ${escapeAttr(item.name)}">+</button>
+        <div class="stepper" aria-label="Количество ${escapeAttr(item.name)}">
+          <button data-dec="${escapeAttr(item.id)}" aria-label="Убрать ${escapeAttr(item.name)}" ${qty === 0 ? 'disabled' : ''}>−</button>
+          <span>${qty}</span>
+          <button data-inc="${escapeAttr(item.id)}" aria-label="Добавить ${escapeAttr(item.name)}">+</button>
+        </div>
       </div>
     </article>
   `;
@@ -146,20 +150,15 @@ function selectedItemModal(state) {
   if (!item) return '';
 
   const qty = state.cart.get(item.id) || 0;
-  const colors = imageThemes[item.image] || ['#314f45', '#d7ad6a'];
-  const imageUrl = safeImageURL(item.imageUrl);
-  const imageStyle = imageUrl
-    ? `background-image: linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.22)), url('${escapeAttr(imageUrl)}')`
-    : `--c1: ${colors[0]}; --c2: ${colors[1]}`;
+  const image = dishImage(item);
 
   return `
     <div class="item-modal" data-item-modal role="dialog" aria-modal="true" aria-label="${escapeAttr(item.name)}">
       <article class="item-sheet">
         <button class="item-sheet__close" data-close-item aria-label="Закрыть">×</button>
-        <div class="item-sheet__image ${imageUrl ? 'dish-art--photo' : ''}" style="${imageStyle}">
-          ${imageUrl ? '' : `<span>${escapeHTML(item.name).slice(0, 1)}</span>`}
-        </div>
+        ${dishMedia(item, image, 'item-sheet__image')}
         <div class="item-sheet__body">
+          <p class="eyebrow">Позиция меню</p>
           <div class="item-sheet__title">
             <h2>${escapeHTML(item.name)}</h2>
             <strong>${formatPrice(item.price)}</strong>
@@ -171,7 +170,7 @@ function selectedItemModal(state) {
           </div>
           <div class="item-sheet__actions">
             <div class="stepper stepper--large" aria-label="Количество ${escapeAttr(item.name)}">
-              <button data-dec="${escapeAttr(item.id)}" aria-label="Убрать ${escapeAttr(item.name)}" ${qty === 0 ? 'disabled' : ''}>-</button>
+              <button data-dec="${escapeAttr(item.id)}" aria-label="Убрать ${escapeAttr(item.name)}" ${qty === 0 ? 'disabled' : ''}>−</button>
               <span>${qty}</span>
               <button data-inc="${escapeAttr(item.id)}" aria-label="Добавить ${escapeAttr(item.name)}">+</button>
             </div>
@@ -183,9 +182,29 @@ function selectedItemModal(state) {
   `;
 }
 
-function safeImageURL(value) {
+function dishMedia(item, image, className) {
+  const colors = imageThemes[item.image] || ['#174f43', '#d7a646'];
+  const style = image
+    ? `background-image: linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.08)), url('${escapeAttr(image)}')`
+    : `--c1: ${colors[0]}; --c2: ${colors[1]}`;
+
+  return `
+    <div class="${className} ${image ? 'dish-art--photo' : ''}" style="${style}" aria-hidden="true">
+      ${image ? '' : `<span>${escapeHTML(item.name).slice(0, 1)}</span>`}
+    </div>
+  `;
+}
+
+function dishImage(item) {
+  return safeImageURL(item.imageUrl, item.id) || localDishImages[item.id] || '';
+}
+
+function safeImageURL(value, itemId = '') {
   const url = String(value || '').trim();
   if (!url) return '';
+  if (url.startsWith('/assets/dishes/blini-') || url.endsWith('/assets/dishes/citrus.jpg')) {
+    return localDishImages[itemId] || '';
+  }
   if (url.startsWith('https://') || url.startsWith('/assets/')) return url;
   return '';
 }
