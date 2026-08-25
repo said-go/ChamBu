@@ -12,7 +12,7 @@ const store = createStore({
 const app = document.querySelector('#app');
 
 function render() {
-  const route = window.location.hash === '#admin' ? 'admin' : 'menu';
+  const route = window.location.hash.startsWith('#admin') ? 'admin' : 'menu';
   app.innerHTML = route === 'admin' ? renderAdmin(store.snapshot()) : renderMenu(store.snapshot());
   bindSharedEvents();
   route === 'admin' ? bindAdminEvents() : bindMenuEvents();
@@ -77,9 +77,43 @@ function bindAdminEvents() {
   document.querySelector('[data-item-form]')?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
+    if (!event.currentTarget.elements.available?.checked) {
+      formData.set('available', 'false');
+    }
     prepareMenuItemForm(formData);
     await store.saveItem(formData);
+    sessionStorage.removeItem('chambu.adminDraft');
     event.currentTarget.reset();
+  });
+
+  document.querySelectorAll('[data-new-item]').forEach((button) => {
+    button.addEventListener('click', () => {
+      sessionStorage.removeItem('chambu.adminDraft');
+    });
+  });
+
+  document.querySelector('[data-search]')?.addEventListener('input', (event) => {
+    store.setQuery(event.target.value);
+  });
+
+  document.querySelectorAll('[data-category]').forEach((button) => {
+    button.addEventListener('click', () => store.setCategory(button.dataset.category));
+  });
+
+  document.querySelectorAll('[data-toggle-item]').forEach((input) => {
+    input.addEventListener('change', async () => {
+      const item = store.snapshot().catalog.items.find((entry) => entry.id === input.dataset.toggleItem);
+      if (!item) return;
+      await store.saveItem(menuItemFormData({ ...item, available: input.checked }));
+    });
+  });
+
+  document.querySelectorAll('[data-edit-item]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const item = store.snapshot().catalog.items.find((entry) => entry.id === button.dataset.editItem);
+      if (item) sessionStorage.setItem('chambu.adminDraft', JSON.stringify(item));
+      window.location.hash = 'admin/new';
+    });
   });
 
   document.querySelectorAll('[data-delete-item]').forEach((button) => {
@@ -105,6 +139,20 @@ function prepareMenuItemForm(formData) {
   if (!formData.get('image')) {
     formData.set('image', categoryImage(category));
   }
+}
+
+function menuItemFormData(item) {
+  const formData = new FormData();
+  formData.set('id', item.id);
+  formData.set('categoryId', item.categoryId);
+  formData.set('name', item.name);
+  formData.set('description', item.description || '');
+  formData.set('price', item.price);
+  formData.set('weight', item.weight || '');
+  formData.set('badges', (item.badges || []).join(', '));
+  formData.set('image', item.image || categoryImage(item.categoryId));
+  formData.set('available', item.available ? 'true' : 'false');
+  return formData;
 }
 
 function categoryImage(category) {

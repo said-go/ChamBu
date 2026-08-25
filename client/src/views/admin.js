@@ -1,93 +1,188 @@
 import { escapeAttr, escapeHTML, formatPrice } from '../utils/format.js';
 
+const localDishImages = {
+  'pancake-honey': assetURL('assets/dishes/dish-honey.jpg'),
+  'pancake-chicken': assetURL('assets/dishes/dish-pancake-stack.jpg'),
+  'pancake-berry': assetURL('assets/dishes/dish-honey.jpg'),
+  'omelet-cheese': assetURL('assets/dishes/dish-omelet.jpg'),
+  syrniki: assetURL('assets/dishes/dish-syrniki.jpg'),
+  'croissant-salmon': assetURL('assets/dishes/dish-croissant.jpg'),
+  'raf-cardamom': assetURL('assets/dishes/dish-coffee.jpg'),
+  'mountain-tea': assetURL('assets/dishes/dish-tea.jpg'),
+  'berry-lemonade': assetURL('assets/dishes/dish-oatmeal.jpg'),
+};
+
 export function renderAdmin(state) {
   if (!state.adminToken) return renderLogin(state);
 
-  const availableCount = state.catalog.items.filter((item) => item.available).length;
-
+  const view = adminView();
   return `
-    <main class="admin-page admin-page--workbench">
-      <header class="admin-mobile-bar">
-        <button class="admin-icon-button" data-route="menu" aria-label="Вернуться в меню">←</button>
-        <div>
-          <span>ЧамБу</span>
-          <strong>Админ-панель</strong>
-        </div>
-        <button class="admin-icon-button" data-logout aria-label="Выйти">×</button>
-      </header>
-
-      ${state.notice ? `<p class="notice admin-notice">${escapeHTML(state.notice)}</p>` : ''}
-
-      <section class="admin-dashboard">
-        <article>
-          <span>Категории</span>
-          <strong>${state.catalog.categories.length}</strong>
-        </article>
-        <article>
-          <span>Позиции</span>
-          <strong>${state.catalog.items.length}</strong>
-        </article>
-        <article>
-          <span>В витрине</span>
-          <strong>${availableCount}</strong>
-        </article>
-      </section>
-
-      <section class="admin-fixed-cats" aria-label="Фиксированные категории">
-        ${state.catalog.categories.map((category) => `<span>${escapeHTML(category.name)}</span>`).join('')}
-      </section>
-
-      <section class="admin-editor">
-        <form class="admin-panel admin-panel--editor" data-item-form enctype="multipart/form-data">
-          <div class="admin-panel-title">
-            <span>Новая позиция</span>
-            <strong>Меню</strong>
-          </div>
-          <div class="admin-form-row">
-            <label>
-              <span>Категория</span>
-              <select name="categoryId" required>
-                ${state.catalog.categories.map((category) => `<option value="${escapeAttr(category.id)}">${escapeHTML(category.name)}</option>`).join('')}
-              </select>
-            </label>
-            <label>
-              <span>Цена</span>
-              <input name="price" type="number" min="0" placeholder="190" required />
-            </label>
-          </div>
-          <label>
-            <span>Название</span>
-            <input name="name" placeholder="Блин с медом" autocomplete="off" required />
-          </label>
-          <label>
-            <span>Описание</span>
-            <textarea name="description" placeholder="Коротко: состав, вкус, подача"></textarea>
-          </label>
-          <label>
-            <span>Вес или объем</span>
-            <input name="weight" placeholder="180 г / 300 мл" />
-          </label>
-          <label class="fileline">
-            <span>Фото блюда</span>
-            <input name="imageFile" type="file" accept="image/png,image/jpeg,image/webp" />
-          </label>
-          <label class="checkline">
-            <input name="available" type="checkbox" checked />
-            <span>Показывать гостям</span>
-          </label>
-          <button class="button button--primary" type="submit" ${state.saving ? 'disabled' : ''}>${state.saving ? 'Сохраняем...' : 'Сохранить позицию'}</button>
-        </form>
-      </section>
-
-      <section class="admin-list admin-list--cards">
-        <div class="admin-section-title">
-          <span>Витрина</span>
-          <strong>Позиции меню</strong>
-        </div>
-        ${state.catalog.items.length ? state.catalog.items.map((item) => itemRow(item, state.deletingId)).join('') : '<p class="empty">Пока нет позиций меню.</p>'}
-      </section>
+    <main class="admin-app">
+      ${state.notice ? `<p class="notice admin-floating-notice">${escapeHTML(state.notice)}</p>` : ''}
+      ${view === 'items' ? renderItems(state) : view === 'new' ? renderNewDish(state) : renderOverview(state)}
     </main>
   `;
+}
+
+function adminView() {
+  if (window.location.hash === '#admin/items') return 'items';
+  if (window.location.hash === '#admin/new') return 'new';
+  return 'overview';
+}
+
+function renderOverview(state) {
+  const availableCount = state.catalog.items.filter((item) => item.available).length;
+  const filtered = filteredItems(state).slice(0, 4);
+
+  return `
+    <section class="admin-phone">
+      ${adminHeader({ kicker: 'ЧамБу', title: 'Админ-панель', back: false })}
+
+      <section class="admin-stats" aria-label="Статистика">
+        ${statCard('⌘', 'Категории', state.catalog.categories.length)}
+        ${statCard('☷', 'Позиции', state.catalog.items.length, 'admin/items')}
+        ${statCard('◉', 'В витрине', availableCount, 'admin/items')}
+      </section>
+
+      <button class="admin-add-main" data-route="admin/new" data-new-item type="button">+ Добавить блюдо</button>
+
+      <section class="admin-tabs" aria-label="Категории">
+        ${categoryButton({ id: 'all', name: 'Все' }, state.activeCategory)}
+        ${state.catalog.categories.map((category) => categoryButton(category, state.activeCategory)).join('')}
+      </section>
+
+      ${adminSearch(state.query)}
+
+      <section class="admin-card-list">
+        ${filtered.length ? filtered.map((item) => overviewItem(item)).join('') : '<p class="empty">Позиции не найдены.</p>'}
+      </section>
+    </section>
+  `;
+}
+
+function renderItems(state) {
+  const items = filteredItems(state);
+
+  return `
+    <section class="admin-phone">
+      ${adminHeader({ title: 'Позиции меню', back: true })}
+
+      <div class="admin-list-tools">
+        ${adminSearch(state.query)}
+        <div class="admin-toolbar">
+          <button type="button">⌯ Фильтры</button>
+          <button type="button">Сначала новые⌄</button>
+          <button type="button" aria-label="Вид списка">☷</button>
+        </div>
+      </div>
+
+      <div class="admin-list-summary">
+        <label class="admin-check">
+          <input type="checkbox" disabled />
+          <strong>${items.length} позиций</strong>
+        </label>
+        <span>Выбрано: 0</span>
+      </div>
+
+      <section class="admin-compact-list">
+        ${items.length ? items.map((item) => compactItem(item, state.deletingId)).join('') : '<p class="empty">Позиции не найдены.</p>'}
+      </section>
+
+      <button class="admin-floating-add" data-route="admin/new" data-new-item type="button">+ Добавить</button>
+    </section>
+  `;
+}
+
+function renderNewDish(state) {
+  const draft = adminDraft();
+  const first = draft || state.catalog.items[0] || {};
+  const selectedCategory = draft?.categoryId || state.catalog.categories[0]?.id || 'pancakes';
+
+  return `
+    <section class="admin-phone admin-phone--form">
+      ${adminHeader({ title: 'Новое блюдо', subtitle: 'Шаги 1 и 2', back: true })}
+
+      <form class="admin-dish-form" data-item-form enctype="multipart/form-data">
+        <section class="admin-photo-drop">
+          <div class="admin-photo-drop__image" style="${previewStyle(first)}"></div>
+          <label>
+            <input name="imageFile" type="file" accept="image/png,image/jpeg,image/webp" />
+            <span>▣</span>
+            <strong>Добавить фото</strong>
+            <small>Рекомендуемое фото 4:3</small>
+          </label>
+        </section>
+
+        <label class="admin-field">
+          <span>Название блюда</span>
+          <input name="name" placeholder="Блин с медом" value="${escapeAttr(draft?.name || '')}" autocomplete="off" required />
+        </label>
+
+        <label class="admin-field">
+          <span>Категория</span>
+          <select name="categoryId" required>
+            ${state.catalog.categories.map((category) => `<option value="${escapeAttr(category.id)}" ${category.id === selectedCategory ? 'selected' : ''}>${escapeHTML(category.name)}</option>`).join('')}
+          </select>
+        </label>
+
+        <label class="admin-field">
+          <span>Цена, ₽</span>
+          <input name="price" type="number" min="0" placeholder="190" value="${escapeAttr(draft?.price || '')}" required />
+        </label>
+
+        <label class="admin-field">
+          <span>Краткое описание <em>(необязательно)</em></span>
+          <textarea name="description" placeholder="Тонкий румяный блин со сливочным маслом и горным медом.">${escapeHTML(draft?.description || '')}</textarea>
+        </label>
+
+        <label class="admin-switch-line">
+          <span>Показывать гостям</span>
+          <input name="available" type="checkbox" ${draft?.available === false ? '' : 'checked'} />
+        </label>
+
+        <div class="admin-form-divider"></div>
+
+        <label class="admin-field">
+          <span>Вес / объем <em>(необязательно)</em></span>
+          <input name="weight" placeholder="Например: 180 г" value="${escapeAttr(draft?.weight || '')}" />
+        </label>
+
+        <label class="admin-field">
+          <span>Теги <em>(необязательно)</em></span>
+          <input name="badges" placeholder="Например: сладкое, классика" value="${escapeAttr((draft?.badges || []).join(', '))}" />
+        </label>
+
+        <details class="admin-extra-settings">
+          <summary>Дополнительные настройки</summary>
+          <label class="admin-field">
+            <span>Технический ID</span>
+            <input name="id" placeholder="Заполнится автоматически" value="${escapeAttr(draft?.id || '')}" pattern="[a-z0-9-]+" autocomplete="off" />
+          </label>
+          <label class="admin-field">
+            <span>Тема изображения</span>
+            <input name="image" placeholder="Заполнится автоматически" value="${escapeAttr(draft?.image || '')}" />
+          </label>
+        </details>
+
+        <section class="admin-preview">
+          <strong>Предпросмотр</strong>
+          ${previewCard(first)}
+        </section>
+
+        <button class="admin-save-main" type="submit" ${state.saving ? 'disabled' : ''}>${state.saving ? 'Сохраняем...' : 'Сохранить блюдо'}</button>
+        <button class="admin-back-outline" data-route="admin" type="button">Назад</button>
+      </form>
+    </section>
+  `;
+}
+
+function adminDraft() {
+  try {
+    const draft = JSON.parse(sessionStorage.getItem('chambu.adminDraft') || 'null');
+    return draft && typeof draft === 'object' ? draft : null;
+  } catch {
+    return null;
+  }
 }
 
 function renderLogin(state) {
@@ -109,20 +204,118 @@ function renderLogin(state) {
   `;
 }
 
-function itemRow(item, deletingId) {
-  const imageUrl = safeImageURL(item.imageUrl);
-  const deleting = deletingId === item.id;
+function adminHeader({ kicker = '', title, subtitle = '', back }) {
   return `
-    <article class="admin-dish-row">
-      <div class="admin-dish-row__image ${imageUrl ? 'admin-dish-row__image--photo' : ''}" style="${imageUrl ? `background-image: url('${escapeAttr(imageUrl)}')` : ''}">${imageUrl ? '' : escapeHTML(item.name).slice(0, 1)}</div>
+    <header class="admin-top">
+      ${back ? '<button class="admin-icon-button" data-route="admin" aria-label="Назад">←</button>' : `<div class="admin-brand-title"><span>${escapeHTML(kicker)}</span><strong>${escapeHTML(title)}</strong></div>`}
+      ${back ? `<div class="admin-centered-title"><strong>${escapeHTML(title)}</strong>${subtitle ? `<span>${escapeHTML(subtitle)}</span>` : ''}</div>` : ''}
+      <button class="admin-user-button" data-logout aria-label="Выйти">♙</button>
+    </header>
+  `;
+}
+
+function statCard(icon, label, value, route = '') {
+  const tag = route ? 'button' : 'article';
+  const routeAttr = route ? ` data-route="${escapeAttr(route)}" type="button"` : '';
+  return `
+    <${tag} class="admin-stat-card"${routeAttr}>
+      <span>${icon}</span>
+      <strong>${escapeHTML(label)}</strong>
+      <b>${value}</b>
+    </${tag}>
+  `;
+}
+
+function adminSearch(query) {
+  return `
+    <label class="admin-search">
+      <span>⌕</span>
+      <input data-search type="search" placeholder="Поиск по меню" value="${escapeAttr(query)}" />
+    </label>
+  `;
+}
+
+function categoryButton(category, activeCategory) {
+  const isActive = activeCategory === category.id;
+  return `<button class="admin-tab ${isActive ? 'is-active' : ''}" data-category="${escapeAttr(category.id)}" type="button">${escapeHTML(category.name)}</button>`;
+}
+
+function overviewItem(item) {
+  return `
+    <article class="admin-menu-card">
+      ${itemImage(item, 'admin-menu-card__image')}
       <div>
         <strong>${escapeHTML(item.name)}</strong>
-        <span>${escapeHTML(categoryName(item.categoryId))} · ${formatPrice(item.price)}${item.weight ? ` · ${escapeHTML(item.weight)}` : ''}</span>
-        <p>${escapeHTML(item.description)}</p>
+        <span>${escapeHTML(categoryName(item.categoryId))} · ${formatPrice(item.price)}</span>
+        ${statusBadge(item.available)}
       </div>
-      <button class="danger-button" data-delete-item="${escapeAttr(item.id)}" ${deleting ? 'disabled' : ''}>${deleting ? 'Удаляем...' : 'Удалить'}</button>
+      <label class="admin-switch" aria-label="Показывать ${escapeAttr(item.name)}">
+        <input data-toggle-item="${escapeAttr(item.id)}" type="checkbox" ${item.available ? 'checked' : ''} />
+        <span></span>
+      </label>
+      <button class="admin-more" data-delete-item="${escapeAttr(item.id)}" type="button" aria-label="Удалить ${escapeAttr(item.name)}">⋮</button>
     </article>
   `;
+}
+
+function compactItem(item, deletingId) {
+  const deleting = deletingId === item.id;
+  return `
+    <article class="admin-compact-item">
+      <label class="admin-check">
+        <input type="checkbox" disabled />
+      </label>
+      ${itemImage(item, 'admin-compact-item__image')}
+      <div>
+        <strong>${escapeHTML(item.name)}</strong>
+        <span>${escapeHTML(categoryName(item.categoryId))} · ${formatPrice(item.price)}</span>
+        ${statusBadge(item.available)}
+      </div>
+      <button data-edit-item="${escapeAttr(item.id)}" type="button" aria-label="Редактировать ${escapeAttr(item.name)}">♢</button>
+      <button data-delete-item="${escapeAttr(item.id)}" type="button" ${deleting ? 'disabled' : ''} aria-label="Удалить ${escapeAttr(item.name)}">⋮</button>
+    </article>
+  `;
+}
+
+function previewCard(item) {
+  return `
+    <article class="admin-preview-card">
+      ${itemImage(item, 'admin-preview-card__image')}
+      <div>
+        <strong>${escapeHTML(item.name || 'Блин с медом')}</strong>
+        <span>${escapeHTML(categoryName(item.categoryId || 'pancakes'))} · ${formatPrice(item.price || 190)}</span>
+        <p>${escapeHTML(item.description || 'Тонкий румяный блин со сливочным маслом и горным медом.')}</p>
+        ${statusBadge(true)}
+      </div>
+    </article>
+  `;
+}
+
+function itemImage(item, className) {
+  const url = dishImage(item);
+  return `<div class="${className}" style="${url ? `background-image: url('${escapeAttr(url)}')` : ''}">${url ? '' : escapeHTML(item.name || 'Ч').slice(0, 1)}</div>`;
+}
+
+function previewStyle(item) {
+  const url = dishImage(item);
+  return url ? `background-image: linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.44)), url('${escapeAttr(url)}')` : '';
+}
+
+function dishImage(item = {}) {
+  return safeImageURL(item.imageUrl) || localDishImages[item.id] || '';
+}
+
+function statusBadge(available) {
+  return `<small class="admin-status ${available ? 'is-public' : 'is-hidden'}">${available ? 'Опубликовано' : 'Скрыто'}</small>`;
+}
+
+function filteredItems(state) {
+  const query = state.query.trim().toLowerCase();
+  return state.catalog.items.filter((item) => {
+    const categoryMatch = state.activeCategory === 'all' || item.categoryId === state.activeCategory;
+    const queryMatch = !query || `${item.name} ${item.description}`.toLowerCase().includes(query);
+    return categoryMatch && queryMatch;
+  });
 }
 
 function categoryName(id) {
@@ -136,7 +329,11 @@ function categoryName(id) {
 function safeImageURL(value) {
   const url = String(value || '').trim();
   if (!url) return '';
-  if (url.startsWith('/assets/')) return new URL(`../../${url.slice(1)}`, import.meta.url).href;
+  if (url.startsWith('/assets/')) return assetURL(url.slice(1));
   if (url.startsWith('https://')) return url;
   return '';
+}
+
+function assetURL(path) {
+  return new URL(`../../${path}`, import.meta.url).href;
 }
