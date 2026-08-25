@@ -5,8 +5,10 @@ export function createStore({ api, onChange }) {
   const state = {
     catalog: fallbackCatalog,
     activeCategory: 'all',
+    adminSort: 'new',
     query: '',
     cart: new Map(),
+    adminSelected: new Set(),
     adminToken: localStorage.getItem('chambu.jwt') || '',
     notice: '',
     loading: true,
@@ -27,6 +29,7 @@ export function createStore({ api, onChange }) {
       return {
         ...state,
         cart: new Map(state.cart),
+        adminSelected: new Set(state.adminSelected),
       };
     },
 
@@ -55,6 +58,22 @@ export function createStore({ api, onChange }) {
 
     setQuery(query) {
       state.query = query;
+      emit();
+    },
+
+    setAdminSort(sort) {
+      state.adminSort = sort;
+      emit();
+    },
+
+    toggleAdminSelection(id) {
+      if (state.adminSelected.has(id)) state.adminSelected.delete(id);
+      else state.adminSelected.add(id);
+      emit();
+    },
+
+    clearAdminSelection() {
+      state.adminSelected.clear();
       emit();
     },
 
@@ -121,6 +140,7 @@ export function createStore({ api, onChange }) {
         await api.saveItem(state.adminToken, item);
         state.notice = 'Позиция сохранена.';
         await refresh();
+        state.adminSelected.delete(item?.get?.('id') || item?.id || '');
       } catch (error) {
         state.notice = error.message;
       } finally {

@@ -50,6 +50,7 @@ type MenuItemCreate struct {
 	Weight      string   `form:"weight" json:"weight"`
 	Badges      []string `form:"badges" json:"badges"`
 	Image       string   `form:"image" json:"image"`
+	ImageURL    string   `form:"imageUrl" json:"imageUrl"`
 	Available   *bool    `form:"available" json:"available"`
 }
 

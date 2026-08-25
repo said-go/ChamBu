@@ -134,7 +134,9 @@ func (r *menuRepository) UpsertItem(item *models.MenuItem) error {
 	existing.Weight = item.Weight
 	existing.Badges = item.Badges
 	existing.Image = item.Image
-	existing.ImageURL = item.ImageURL
+	if item.ImageURL != "" {
+		existing.ImageURL = item.ImageURL
+	}
 	existing.Available = item.Available
 	existing.SortOrder = item.SortOrder
 	return r.db.Save(&existing).Error

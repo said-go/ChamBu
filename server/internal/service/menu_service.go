@@ -68,6 +68,10 @@ func (s *menuService) UploadImage(file *multipart.FileHeader) (string, error) {
 }
 
 func (s *menuService) Create(input *models.MenuItemCreate, imageURL string) (*models.MenuItemDTO, error) {
+	if imageURL == "" {
+		imageURL = strings.TrimSpace(input.ImageURL)
+	}
+
 	slug := strings.TrimSpace(input.ID)
 	if slug == "" {
 		slug = uniqueSlug(input.Name)

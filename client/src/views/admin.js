@@ -19,13 +19,14 @@ export function renderAdmin(state) {
   return `
     <main class="admin-app">
       ${state.notice ? `<p class="notice admin-floating-notice">${escapeHTML(state.notice)}</p>` : ''}
-      ${view === 'items' ? renderItems(state) : view === 'new' ? renderNewDish(state) : renderOverview(state)}
+      ${view === 'items' ? renderItems(state) : view === 'newDetails' ? renderNewDishDetails(state) : view === 'new' ? renderNewDishMain(state) : renderOverview(state)}
     </main>
   `;
 }
 
 function adminView() {
   if (window.location.hash === '#admin/items') return 'items';
+  if (window.location.hash === '#admin/new/details') return 'newDetails';
   if (window.location.hash === '#admin/new') return 'new';
   return 'overview';
 }
@@ -62,6 +63,7 @@ function renderOverview(state) {
 
 function renderItems(state) {
   const items = filteredItems(state);
+  const selectedCount = state.adminSelected?.size || 0;
 
   return `
     <section class="admin-phone">
@@ -71,21 +73,30 @@ function renderItems(state) {
         ${adminSearch(state.query)}
         <div class="admin-toolbar">
           <button type="button">⌯ Фильтры</button>
-          <button type="button">Сначала новые⌄</button>
+          <select data-admin-sort aria-label="Сортировка">
+            <option value="new" ${state.adminSort === 'new' ? 'selected' : ''}>Сначала новые</option>
+            <option value="name" ${state.adminSort === 'name' ? 'selected' : ''}>По названию</option>
+            <option value="priceAsc" ${state.adminSort === 'priceAsc' ? 'selected' : ''}>Цена по возрастанию</option>
+            <option value="priceDesc" ${state.adminSort === 'priceDesc' ? 'selected' : ''}>Цена по убыванию</option>
+          </select>
           <button type="button" aria-label="Вид списка">☷</button>
         </div>
+        <section class="admin-tabs admin-tabs--list" aria-label="Фильтр по категории">
+          ${categoryButton({ id: 'all', name: 'Все' }, state.activeCategory)}
+          ${state.catalog.categories.map((category) => categoryButton(category, state.activeCategory)).join('')}
+        </section>
       </div>
 
       <div class="admin-list-summary">
         <label class="admin-check">
-          <input type="checkbox" disabled />
+          <input type="checkbox" data-select-visible ${items.length && selectedCount === items.length ? 'checked' : ''} />
           <strong>${items.length} позиций</strong>
         </label>
-        <span>Выбрано: 0</span>
+        ${selectedCount ? `<button class="admin-bulk-delete" data-delete-selected type="button">Удалить (${selectedCount})</button>` : `<span>Выбрано: 0</span>`}
       </div>
 
       <section class="admin-compact-list">
-        ${items.length ? items.map((item) => compactItem(item, state.deletingId)).join('') : '<p class="empty">Позиции не найдены.</p>'}
+        ${items.length ? items.map((item) => compactItem(item, state.deletingId, state.adminSelected)).join('') : '<p class="empty">Позиции не найдены.</p>'}
       </section>
 
       <button class="admin-floating-add" data-route="admin/new" data-new-item type="button">+ Добавить</button>
@@ -93,16 +104,16 @@ function renderItems(state) {
   `;
 }
 
-function renderNewDish(state) {
+function renderNewDishMain(state) {
   const draft = adminDraft();
   const first = draft || state.catalog.items[0] || {};
   const selectedCategory = draft?.categoryId || state.catalog.categories[0]?.id || 'pancakes';
 
   return `
     <section class="admin-phone admin-phone--form">
-      ${adminHeader({ title: 'Новое блюдо', subtitle: 'Шаги 1 и 2', back: true })}
+      ${adminHeader({ title: 'Новое блюдо', subtitle: 'Шаг 1 из 2', back: true })}
 
-      <form class="admin-dish-form" data-item-form enctype="multipart/form-data">
+      <form class="admin-dish-form" data-admin-step-one enctype="multipart/form-data" novalidate>
         <section class="admin-photo-drop">
           <div class="admin-photo-drop__image" style="${previewStyle(first)}"></div>
           <label>
@@ -111,11 +122,13 @@ function renderNewDish(state) {
             <strong>Добавить фото</strong>
             <small>Рекомендуемое фото 4:3</small>
           </label>
+          <small class="admin-field-error admin-photo-error" data-error-for="imageFile"></small>
         </section>
 
         <label class="admin-field">
           <span>Название блюда</span>
           <input name="name" placeholder="Блин с медом" value="${escapeAttr(draft?.name || '')}" autocomplete="off" required />
+          <small class="admin-field-error" data-error-for="name"></small>
         </label>
 
         <label class="admin-field">
@@ -123,11 +136,13 @@ function renderNewDish(state) {
           <select name="categoryId" required>
             ${state.catalog.categories.map((category) => `<option value="${escapeAttr(category.id)}" ${category.id === selectedCategory ? 'selected' : ''}>${escapeHTML(category.name)}</option>`).join('')}
           </select>
+          <small class="admin-field-error" data-error-for="categoryId"></small>
         </label>
 
         <label class="admin-field">
           <span>Цена, ₽</span>
           <input name="price" type="number" min="0" placeholder="190" value="${escapeAttr(draft?.price || '')}" required />
+          <small class="admin-field-error" data-error-for="price"></small>
         </label>
 
         <label class="admin-field">
@@ -140,6 +155,21 @@ function renderNewDish(state) {
           <input name="available" type="checkbox" ${draft?.available === false ? '' : 'checked'} />
         </label>
 
+        <button class="admin-save-main" type="submit">Продолжить</button>
+      </form>
+    </section>
+  `;
+}
+
+function renderNewDishDetails(state) {
+  const draft = adminDraft() || {};
+  const first = draft.id ? draft : state.catalog.items[0] || {};
+
+  return `
+    <section class="admin-phone admin-phone--form">
+      ${adminHeader({ title: 'Новое блюдо', subtitle: 'Шаг 2 из 2', back: true })}
+
+      <form class="admin-dish-form" data-item-form enctype="multipart/form-data" novalidate>
         <div class="admin-form-divider"></div>
 
         <label class="admin-field">
@@ -170,7 +200,7 @@ function renderNewDish(state) {
         </section>
 
         <button class="admin-save-main" type="submit" ${state.saving ? 'disabled' : ''}>${state.saving ? 'Сохраняем...' : 'Сохранить блюдо'}</button>
-        <button class="admin-back-outline" data-route="admin" type="button">Назад</button>
+        <button class="admin-back-outline" data-route="admin/new" type="button">Назад</button>
       </form>
     </section>
   `;
@@ -258,12 +288,13 @@ function overviewItem(item) {
   `;
 }
 
-function compactItem(item, deletingId) {
+function compactItem(item, deletingId, selected) {
   const deleting = deletingId === item.id;
+  const checked = selected?.has(item.id);
   return `
     <article class="admin-compact-item">
       <label class="admin-check">
-        <input type="checkbox" disabled />
+        <input data-select-item="${escapeAttr(item.id)}" type="checkbox" ${checked ? 'checked' : ''} />
       </label>
       ${itemImage(item, 'admin-compact-item__image')}
       <div>
@@ -297,11 +328,12 @@ function itemImage(item, className) {
 }
 
 function previewStyle(item) {
-  const url = dishImage(item);
+  const url = item?.imagePreview || dishImage(item);
   return url ? `background-image: linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.44)), url('${escapeAttr(url)}')` : '';
 }
 
 function dishImage(item = {}) {
+  if (item.imagePreview) return item.imagePreview;
   return safeImageURL(item.imageUrl) || localDishImages[item.id] || '';
 }
 
@@ -311,10 +343,17 @@ function statusBadge(available) {
 
 function filteredItems(state) {
   const query = state.query.trim().toLowerCase();
-  return state.catalog.items.filter((item) => {
+  const items = state.catalog.items.filter((item) => {
     const categoryMatch = state.activeCategory === 'all' || item.categoryId === state.activeCategory;
     const queryMatch = !query || `${item.name} ${item.description}`.toLowerCase().includes(query);
     return categoryMatch && queryMatch;
+  });
+
+  return items.sort((a, b) => {
+    if (state.adminSort === 'name') return a.name.localeCompare(b.name, 'ru');
+    if (state.adminSort === 'priceAsc') return a.price - b.price;
+    if (state.adminSort === 'priceDesc') return b.price - a.price;
+    return 0;
   });
 }
 

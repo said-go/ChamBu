@@ -3,6 +3,7 @@ package transport
 import (
 	"encoding/json"
 	"errors"
+	"mime/multipart"
 	"net/http"
 	"strconv"
 	"strings"
@@ -83,6 +84,10 @@ func (h *MenuHandler) Create(c *gin.Context) {
 	imageURL := ""
 	file, err := c.FormFile("imageFile")
 	if err == nil {
+		if err := validateImageUpload(file); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		imageURL, err = h.service.UploadImage(file)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -181,12 +186,15 @@ func menuItemCreateFromRequest(c *gin.Context) (*models.MenuItemCreate, error) {
 		if err := c.ShouldBindJSON(&req); err != nil {
 			return nil, err
 		}
+		if err := validateMenuCreate(&req); err != nil {
+			return nil, err
+		}
 		return &req, nil
 	}
 
 	price, err := strconv.ParseInt(c.PostForm("price"), 10, 64)
 	if err != nil {
-		return nil, errors.New("invalid price")
+		return nil, errors.New("укажите корректную цену")
 	}
 
 	var badges []string
@@ -212,7 +220,7 @@ func menuItemCreateFromRequest(c *gin.Context) (*models.MenuItemCreate, error) {
 		available = parsed
 	}
 
-	return &models.MenuItemCreate{
+	req := &models.MenuItemCreate{
 		ID:          c.PostForm("id"),
 		CategoryID:  c.PostForm("categoryId"),
 		Name:        c.PostForm("name"),
@@ -221,8 +229,46 @@ func menuItemCreateFromRequest(c *gin.Context) (*models.MenuItemCreate, error) {
 		Weight:      c.PostForm("weight"),
 		Badges:      badges,
 		Image:       c.PostForm("image"),
+		ImageURL:    c.PostForm("imageUrl"),
 		Available:   &available,
-	}, nil
+	}
+	if err := validateMenuCreate(req); err != nil {
+		return nil, err
+	}
+	return req, nil
+}
+
+func validateMenuCreate(input *models.MenuItemCreate) error {
+	input.Name = strings.TrimSpace(input.Name)
+	input.CategoryID = strings.TrimSpace(input.CategoryID)
+	input.ID = strings.TrimSpace(input.ID)
+	input.Description = strings.TrimSpace(input.Description)
+	input.Weight = strings.TrimSpace(input.Weight)
+	input.Image = strings.TrimSpace(input.Image)
+	input.ImageURL = strings.TrimSpace(input.ImageURL)
+
+	if input.Name == "" {
+		return errors.New("введите название блюда")
+	}
+	if input.CategoryID == "" {
+		return errors.New("выберите категорию")
+	}
+	if input.Price <= 0 {
+		return errors.New("цена должна быть больше 0")
+	}
+	return nil
+}
+
+func validateImageUpload(file *multipart.FileHeader) error {
+	if file.Size > 8*1024*1024 {
+		return errors.New("фото должно быть меньше 8 МБ")
+	}
+
+	contentType := file.Header.Get("Content-Type")
+	if contentType != "image/jpeg" && contentType != "image/png" && contentType != "image/webp" {
+		return errors.New("загрузите фото в формате JPG, PNG или WebP")
+	}
+	return nil
 }
 
 func parseBoolForm(value string) (bool, error) {
