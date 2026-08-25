@@ -43,18 +43,30 @@ export function renderAdmin(state) {
             <span>Новая позиция</span>
             <strong>Меню</strong>
           </div>
-          <input name="id" placeholder="id: pancake-honey" pattern="[a-z0-9-]+" autocomplete="off" required />
-          <select name="categoryId" required>
-            ${state.catalog.categories.map((category) => `<option value="${escapeAttr(category.id)}">${escapeHTML(category.name)}</option>`).join('')}
-          </select>
-          <input name="name" placeholder="Название" autocomplete="off" required />
-          <textarea name="description" placeholder="Описание"></textarea>
           <div class="admin-form-row">
-            <input name="price" type="number" min="0" placeholder="Цена" required />
-            <input name="weight" placeholder="Вес/объем" />
+            <label>
+              <span>Категория</span>
+              <select name="categoryId" required>
+                ${state.catalog.categories.map((category) => `<option value="${escapeAttr(category.id)}">${escapeHTML(category.name)}</option>`).join('')}
+              </select>
+            </label>
+            <label>
+              <span>Цена</span>
+              <input name="price" type="number" min="0" placeholder="190" required />
+            </label>
           </div>
-          <input name="badges" placeholder="Бейджи через запятую" />
-          <input name="image" placeholder="Тема: breakfast, dessert, coffee" value="breakfast" />
+          <label>
+            <span>Название</span>
+            <input name="name" placeholder="Блин с медом" autocomplete="off" required />
+          </label>
+          <label>
+            <span>Описание</span>
+            <textarea name="description" placeholder="Коротко: состав, вкус, подача"></textarea>
+          </label>
+          <label>
+            <span>Вес или объем</span>
+            <input name="weight" placeholder="180 г / 300 мл" />
+          </label>
           <label class="fileline">
             <span>Фото блюда</span>
             <input name="imageFile" type="file" accept="image/png,image/jpeg,image/webp" />

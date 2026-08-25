@@ -42,7 +42,7 @@ type MenuItem struct {
 }
 
 type MenuItemCreate struct {
-	ID          string   `form:"id" json:"id" binding:"required"`
+	ID          string   `form:"id" json:"id"`
 	CategoryID  string   `form:"categoryId" json:"categoryId" binding:"required"`
 	Name        string   `form:"name" json:"name" binding:"required"`
 	Description string   `form:"description" json:"description"`

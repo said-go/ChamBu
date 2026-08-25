@@ -681,11 +681,25 @@ button:disabled,
 .admin-login-form,
 .admin-panel {
   display: grid;
-  gap: 11px;
+  gap: 14px;
+}
+
+.admin-panel label:not(.checkline):not(.fileline),
+.admin-form-row label {
+  display: grid;
+  gap: 7px;
+}
+
+.admin-panel label > span,
+.admin-form-row label > span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
 }
 
 .admin-login-form input,
-.admin-panel input,
+.admin-panel input:not([type="checkbox"]):not([type="file"]),
 .admin-panel textarea,
 .admin-panel select {
   width: 100%;
@@ -843,12 +857,28 @@ button:disabled,
   font-weight: 800;
 }
 
+.checkline input {
+  width: 18px;
+  height: 18px;
+  min-height: 18px;
+  accent-color: var(--green);
+}
+
 .fileline {
   display: grid;
   gap: 8px;
   color: var(--muted);
   font-size: 13px;
   font-weight: 800;
+}
+
+.fileline input {
+  width: 100%;
+  border: 1px dashed rgba(23, 79, 67, 0.28);
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.62);
+  color: var(--muted);
 }
 
 .danger-button {

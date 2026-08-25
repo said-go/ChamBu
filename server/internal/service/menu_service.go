@@ -4,6 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"mime/multipart"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
 
 	"chambu/server/internal/models"
 	"chambu/server/internal/repository"
@@ -13,6 +17,8 @@ import (
 )
 
 var ErrMenuItemNotFound = errors.New("menu item not found")
+
+var slugCleanup = regexp.MustCompile(`[^a-z0-9]+`)
 
 type MenuService interface {
 	Catalog() (*models.Catalog, error)
@@ -62,15 +68,24 @@ func (s *menuService) UploadImage(file *multipart.FileHeader) (string, error) {
 }
 
 func (s *menuService) Create(input *models.MenuItemCreate, imageURL string) (*models.MenuItemDTO, error) {
+	slug := strings.TrimSpace(input.ID)
+	if slug == "" {
+		slug = uniqueSlug(input.Name)
+	}
+	image := strings.TrimSpace(input.Image)
+	if image == "" {
+		image = defaultImage(input.CategoryID)
+	}
+
 	item := &models.MenuItem{
-		Slug:        input.ID,
+		Slug:        slug,
 		CategoryID:  input.CategoryID,
 		Name:        input.Name,
 		Description: input.Description,
 		Price:       input.Price,
 		Weight:      input.Weight,
 		Badges:      jsonArray(input.Badges),
-		Image:       input.Image,
+		Image:       image,
 		ImageURL:    imageURL,
 		Available:   true,
 	}
@@ -176,6 +191,37 @@ func (s *menuService) DeleteCategory(slug string) error {
 func jsonArray(values []string) datatypes.JSON {
 	raw, _ := json.Marshal(values)
 	return datatypes.JSON(raw)
+}
+
+func defaultImage(category string) string {
+	switch category {
+	case "pancakes":
+		return "pancake-folded"
+	case "drinks":
+		return "coffee"
+	default:
+		return "breakfast"
+	}
+}
+
+func uniqueSlug(value string) string {
+	slug := slugify(value)
+	if slug == "" {
+		slug = "item"
+	}
+	return slug + "-" + strconv.FormatInt(time.Now().Unix(), 36)
+}
+
+func slugify(value string) string {
+	replacer := strings.NewReplacer(
+		"а", "a", "б", "b", "в", "v", "г", "g", "д", "d", "е", "e", "ё", "e", "ж", "zh", "з", "z",
+		"и", "i", "й", "y", "к", "k", "л", "l", "м", "m", "н", "n", "о", "o", "п", "p", "р", "r",
+		"с", "s", "т", "t", "у", "u", "ф", "f", "х", "h", "ц", "c", "ч", "ch", "ш", "sh", "щ", "sch",
+		"ъ", "", "ы", "y", "ь", "", "э", "e", "ю", "yu", "я", "ya",
+	)
+	slug := replacer.Replace(strings.ToLower(strings.TrimSpace(value)))
+	slug = slugCleanup.ReplaceAllString(slug, "-")
+	return strings.Trim(slug, "-")
 }
 
 func brandDTO(brand models.BrandSettings) models.BrandDTO {
