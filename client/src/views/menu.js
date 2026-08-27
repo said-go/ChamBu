@@ -43,7 +43,9 @@ export function renderMenu(state) {
 
           <div class="hero__content">
             <p class="eyebrow">${escapeHTML(brand.subtitle)}</p>
-            <h1>${escapeHTML(brand.name)}</h1>
+            <h1 class="hero-wordmark">
+              <img src="${assetURL('assets/chambu-wordmark.svg')}" alt="${escapeAttr(brand.name)}" decoding="async" />
+            </h1>
             <p>${escapeHTML(brand.description)}</p>
             <div class="hero__actions">
               <a class="button button--primary" href="#menu">Открыть меню</a>

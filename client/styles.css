@@ -86,9 +86,12 @@ button:disabled,
   align-content: space-between;
   padding: 28px;
   color: #fff;
+  background-color: #e9d7bd;
   background:
-    linear-gradient(180deg, rgba(9, 25, 21, 0.72), rgba(9, 25, 21, 0.16) 48%, rgba(9, 25, 21, 0.76)),
-    url("./assets/chambu-hero.png") center / cover;
+    linear-gradient(180deg, rgba(48, 35, 28, 0.58) 0%, rgba(48, 35, 28, 0.22) 17%, rgba(48, 35, 28, 0) 31%),
+    radial-gradient(ellipse at 38% 40%, rgba(38, 28, 23, 0.62) 0%, rgba(38, 28, 23, 0.42) 28%, rgba(38, 28, 23, 0) 58%),
+    linear-gradient(180deg, rgba(38, 28, 23, 0) 46%, rgba(38, 28, 23, 0.2) 66%, rgba(38, 28, 23, 0.68) 100%),
+    url("./assets/chambu-hero-approved.png") center 48% / cover no-repeat;
 }
 
 .topbar {
@@ -138,11 +141,17 @@ button:disabled,
   text-transform: uppercase;
 }
 
-.hero__content h1 {
-  margin: 14px 0 0;
-  font-size: clamp(74px, 9vw, 118px);
-  line-height: 0.9;
-  letter-spacing: 0;
+.hero-wordmark {
+  width: min(100%, 390px);
+  margin: 12px 0 0;
+  line-height: 1;
+}
+
+.hero-wordmark img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 4px 16px rgba(28, 20, 15, 0.34));
 }
 
 .hero__content p:not(.eyebrow) {
@@ -1532,6 +1541,7 @@ button:disabled,
 
   .hero-visual {
     min-height: 700px;
+    background-position: center 52%;
   }
 
   .menu-panel {
@@ -1556,14 +1566,15 @@ button:disabled,
   .hero-visual {
     min-height: 620px;
     padding: 26px;
+    background-position: center 48%;
   }
 
   .hero__content {
     padding-top: 110px;
   }
 
-  .hero__content h1 {
-    font-size: clamp(54px, 18vw, 76px);
+  .hero-wordmark {
+    width: min(100%, 318px);
   }
 
   .hero__actions {
@@ -1645,6 +1656,11 @@ button:disabled,
 
   .hero-visual {
     padding: 24px;
+    background-position: center 46%;
+  }
+
+  .hero-wordmark {
+    width: min(100%, 300px);
   }
 }
 
