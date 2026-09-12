@@ -145,6 +145,13 @@ func seed(db *gorm.DB) {
 		db.Save(&existing)
 	}
 
+	var adminCount int64
+	if err := db.Model(&models.Admin{}).Count(&adminCount).Error; err != nil {
+		log.Fatalf("count admins: %v", err)
+	}
+	if adminCount > 0 {
+		return
+	}
 	password, _ := bcrypt.GenerateFromPassword([]byte("chambu-admin"), bcrypt.DefaultCost)
 	var admin models.Admin
 	db.Unscoped().Where("email = ?", "admin@chambu.local").FirstOrCreate(&admin, models.Admin{

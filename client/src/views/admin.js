@@ -225,7 +225,7 @@ function renderLogin(state) {
         <p>Управление позициями меню доступно после авторизации администратора.</p>
         ${state.notice ? `<p class="notice admin-login-notice">${escapeHTML(state.notice)}</p>` : ''}
         <form data-login-form class="admin-login-form">
-          <input name="email" type="email" placeholder="admin@chambu.local" autocomplete="username" required />
+          <input name="email" type="text" placeholder="Логин" aria-label="Логин" autocomplete="username" autocapitalize="none" spellcheck="false" required />
           <input name="password" type="password" placeholder="Пароль" autocomplete="current-password" required />
           <button class="button button--primary" type="submit" ${state.saving ? 'disabled' : ''}>${state.saving ? 'Проверяем...' : 'Войти'}</button>
         </form>
