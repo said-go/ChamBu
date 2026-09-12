@@ -91,7 +91,7 @@ button:disabled,
     linear-gradient(180deg, rgba(48, 35, 28, 0.58) 0%, rgba(48, 35, 28, 0.22) 17%, rgba(48, 35, 28, 0) 31%),
     radial-gradient(ellipse at 38% 40%, rgba(38, 28, 23, 0.62) 0%, rgba(38, 28, 23, 0.42) 28%, rgba(38, 28, 23, 0) 58%),
     linear-gradient(180deg, rgba(38, 28, 23, 0) 46%, rgba(38, 28, 23, 0.2) 66%, rgba(38, 28, 23, 0.68) 100%),
-    url("./assets/chambu-hero-approved.png") center 48% / cover no-repeat;
+    url("./assets/chambu-hero-approved.png?v=20260912-2") center 48% / cover no-repeat;
 }
 
 .topbar {
@@ -196,6 +196,15 @@ button:disabled,
   color: #fff;
   background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(8px);
+}
+
+.hero__actions .button--primary {
+  background: linear-gradient(180deg, #f6ad6d, #f19a55);
+  color: #222;
+}
+
+.hero__actions .button--primary:hover {
+  background: #f8b77f;
 }
 
 .info-strip {

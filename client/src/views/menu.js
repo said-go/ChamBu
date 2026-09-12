@@ -42,7 +42,7 @@ export function renderMenu(state) {
           </nav>
 
           <div class="hero__content">
-            <p class="eyebrow">${escapeHTML(brand.subtitle)}</p>
+            <p class="eyebrow">Первая блинная в Грозном</p>
             <h1 class="hero-wordmark">
               <img src="${assetURL('assets/chambu-wordmark.svg')}" alt="${escapeAttr(brand.name)}" decoding="async" />
             </h1>
