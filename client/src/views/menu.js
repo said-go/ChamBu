@@ -46,7 +46,7 @@ export function renderMenu(state) {
             <h1 class="hero-wordmark">
               <img src="${assetURL('assets/chambu-wordmark.svg')}" alt="${escapeAttr(brand.name)}" decoding="async" />
             </h1>
-            <p>${escapeHTML(brand.description)}</p>
+            <p><strong>Пусть мир немного подождёт.</strong><br />Здесь есть время для себя, близких и неспешных разговоров.</p>
             <div class="hero__actions">
               <a class="button button--primary" href="#menu">Открыть меню</a>
               <a class="button button--glass" href="tel:${phoneHref}">Позвонить</a>
