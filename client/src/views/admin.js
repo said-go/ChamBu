@@ -19,13 +19,12 @@ export function renderAdmin(state) {
   return `
     <main class="admin-app">
       ${state.notice ? `<p class="notice admin-floating-notice">${escapeHTML(state.notice)}</p>` : ''}
-      ${view === 'items' ? renderItems(state) : view === 'newDetails' ? renderNewDishDetails(state) : view === 'new' ? renderNewDishMain(state) : renderOverview(state)}
+      ${view === 'newDetails' ? renderNewDishDetails(state) : view === 'new' ? renderNewDishMain(state) : renderOverview(state)}
     </main>
   `;
 }
 
 function adminView() {
-  if (window.location.hash === '#admin/items') return 'items';
   if (window.location.hash === '#admin/new/details') return 'newDetails';
   if (window.location.hash === '#admin/new') return 'new';
   return 'overview';
@@ -41,8 +40,8 @@ function renderOverview(state) {
 
       <section class="admin-stats" aria-label="Статистика">
         ${statCard('⌘', 'Категории', state.catalog.categories.length)}
-        ${statCard('☷', 'Позиции', state.catalog.items.length, 'admin/items')}
-        ${statCard('◉', 'В витрине', availableCount, 'admin/items')}
+        ${statCard('☷', 'Позиции', state.catalog.items.length)}
+        ${statCard('◉', 'В витрине', availableCount)}
       </section>
 
       <button class="admin-add-main" data-route="admin/new" data-new-item type="button">+ Добавить блюдо</button>
@@ -53,54 +52,37 @@ function renderOverview(state) {
       </section>
 
       ${adminSearch(state.query)}
+      ${listControls(state, filtered)}
 
       <section class="admin-card-list">
-        ${filtered.length ? filtered.map((item) => overviewItem(item)).join('') : '<p class="empty">Позиции не найдены.</p>'}
+        ${filtered.length ? filtered.map((item) => overviewItem(item, state)).join('') : '<p class="empty">Позиции не найдены.</p>'}
       </section>
+      <button class="admin-floating-add" data-route="admin/new" data-new-item type="button">+ Добавить</button>
     </section>
   `;
 }
 
-function renderItems(state) {
-  const items = filteredItems(state);
+function listControls(state, items) {
   const selectedCount = state.adminSelected?.size || 0;
 
   return `
-    <section class="admin-phone">
-      ${adminHeader({ title: 'Позиции меню', back: true })}
-
-      <div class="admin-list-tools">
-        ${adminSearch(state.query)}
-        <div class="admin-toolbar">
-          <button type="button">⌯ Фильтры</button>
+        <div class="admin-toolbar admin-toolbar--unified">
           <select data-admin-sort aria-label="Сортировка">
             <option value="new" ${state.adminSort === 'new' ? 'selected' : ''}>Сначала новые</option>
             <option value="name" ${state.adminSort === 'name' ? 'selected' : ''}>По названию</option>
             <option value="priceAsc" ${state.adminSort === 'priceAsc' ? 'selected' : ''}>Цена по возрастанию</option>
             <option value="priceDesc" ${state.adminSort === 'priceDesc' ? 'selected' : ''}>Цена по убыванию</option>
           </select>
-          <button type="button" aria-label="Вид списка">☷</button>
         </div>
-        <section class="admin-tabs admin-tabs--list" aria-label="Фильтр по категории">
-          ${categoryButton({ id: 'all', name: 'Все' }, state.activeCategory)}
-          ${state.catalog.categories.map((category) => categoryButton(category, state.activeCategory)).join('')}
-        </section>
-      </div>
 
       <div class="admin-list-summary">
         <label class="admin-check">
-          <input type="checkbox" data-select-visible ${items.length && selectedCount === items.length ? 'checked' : ''} />
+          <input type="checkbox" aria-label="Выбрать все показанные блюда" data-select-visible ${items.length && items.every((item) => state.adminSelected?.has(item.id)) ? 'checked' : ''} />
           <strong>${items.length} позиций</strong>
         </label>
         ${selectedCount ? `<button class="admin-bulk-delete" data-delete-selected type="button">Удалить (${selectedCount})</button>` : `<span>Выбрано: 0</span>`}
       </div>
 
-      <section class="admin-compact-list">
-        ${items.length ? items.map((item) => compactItem(item, state.deletingId, state.adminSelected)).join('') : '<p class="empty">Позиции не найдены.</p>'}
-      </section>
-
-      <button class="admin-floating-add" data-route="admin/new" data-new-item type="button">+ Добавить</button>
-    </section>
   `;
 }
 
@@ -111,7 +93,7 @@ function renderNewDishMain(state) {
 
   return `
     <section class="admin-phone admin-phone--form">
-      ${adminHeader({ title: 'Новое блюдо', subtitle: 'Шаг 1 из 2', back: true })}
+      ${adminHeader({ title: draft?.id ? 'Редактировать блюдо' : 'Новое блюдо', subtitle: 'Шаг 1 из 2', back: true })}
 
       <form class="admin-dish-form" data-admin-step-one enctype="multipart/form-data" novalidate>
         <section class="admin-photo-drop">
@@ -163,11 +145,11 @@ function renderNewDishMain(state) {
 
 function renderNewDishDetails(state) {
   const draft = adminDraft() || {};
-  const first = draft.id ? draft : state.catalog.items[0] || {};
+  const first = draft;
 
   return `
     <section class="admin-phone admin-phone--form">
-      ${adminHeader({ title: 'Новое блюдо', subtitle: 'Шаг 2 из 2', back: true })}
+      ${adminHeader({ title: draft.id ? 'Редактировать блюдо' : 'Новое блюдо', subtitle: 'Шаг 2 из 2', back: true })}
 
       <form class="admin-dish-form" data-item-form enctype="multipart/form-data" novalidate>
         <div class="admin-form-divider"></div>
@@ -186,7 +168,7 @@ function renderNewDishDetails(state) {
           <summary>Дополнительные настройки</summary>
           <label class="admin-field">
             <span>Технический ID</span>
-            <input name="id" placeholder="Заполнится автоматически" value="${escapeAttr(draft?.id || '')}" pattern="[a-z0-9-]+" autocomplete="off" />
+            <input name="id" placeholder="Заполнится автоматически" value="${escapeAttr(draft?.id || '')}" ${draft.id ? 'readonly' : ''} pattern="[a-z0-9-]+" autocomplete="off" />
           </label>
           <label class="admin-field">
             <span>Тема изображения</span>
@@ -270,40 +252,29 @@ function categoryButton(category, activeCategory) {
   return `<button class="admin-tab ${isActive ? 'is-active' : ''}" data-category="${escapeAttr(category.id)}" type="button">${escapeHTML(category.name)}</button>`;
 }
 
-function overviewItem(item) {
+function overviewItem(item, state) {
   return `
     <article class="admin-menu-card">
+      <label class="admin-check">
+        <input data-select-item="${escapeAttr(item.id)}" type="checkbox" aria-label="Выбрать ${escapeAttr(item.name)}" ${state.adminSelected?.has(item.id) ? 'checked' : ''} />
+      </label>
       ${itemImage(item, 'admin-menu-card__image')}
-      <div>
+      <div class="admin-menu-card__text">
         <strong>${escapeHTML(item.name)}</strong>
         <span>${escapeHTML(categoryName(item.categoryId))} · ${formatPrice(item.price)}</span>
         ${statusBadge(item.available)}
       </div>
-      <label class="admin-switch" aria-label="Показывать ${escapeAttr(item.name)}">
-        <input data-toggle-item="${escapeAttr(item.id)}" type="checkbox" ${item.available ? 'checked' : ''} />
+      <label class="admin-switch">
+        <input data-toggle-item="${escapeAttr(item.id)}" aria-label="Показывать ${escapeAttr(item.name)}" type="checkbox" ${item.available ? 'checked' : ''} ${state.saving ? 'disabled' : ''} />
         <span></span>
       </label>
-      <button class="admin-more" data-delete-item="${escapeAttr(item.id)}" type="button" aria-label="Удалить ${escapeAttr(item.name)}">⋮</button>
-    </article>
-  `;
-}
-
-function compactItem(item, deletingId, selected) {
-  const deleting = deletingId === item.id;
-  const checked = selected?.has(item.id);
-  return `
-    <article class="admin-compact-item">
-      <label class="admin-check">
-        <input data-select-item="${escapeAttr(item.id)}" type="checkbox" ${checked ? 'checked' : ''} />
-      </label>
-      ${itemImage(item, 'admin-compact-item__image')}
-      <div>
-        <strong>${escapeHTML(item.name)}</strong>
-        <span>${escapeHTML(categoryName(item.categoryId))} · ${formatPrice(item.price)}</span>
-        ${statusBadge(item.available)}
+      <div class="admin-item-actions">
+        <button class="admin-more" data-item-actions type="button" aria-label="Действия: ${escapeAttr(item.name)}" aria-expanded="false" aria-haspopup="true">⋮</button>
+        <div class="admin-action-menu" hidden>
+          <button data-edit-item="${escapeAttr(item.id)}" type="button">Редактировать</button>
+          <button data-delete-item="${escapeAttr(item.id)}" type="button" ${state.deletingId ? 'disabled' : ''}>Удалить</button>
+        </div>
       </div>
-      <button data-edit-item="${escapeAttr(item.id)}" type="button" aria-label="Редактировать ${escapeAttr(item.name)}">♢</button>
-      <button data-delete-item="${escapeAttr(item.id)}" type="button" ${deleting ? 'disabled' : ''} aria-label="Удалить ${escapeAttr(item.name)}">⋮</button>
     </article>
   `;
 }
@@ -316,7 +287,7 @@ function previewCard(item) {
         <strong>${escapeHTML(item.name || 'Блин с медом')}</strong>
         <span>${escapeHTML(categoryName(item.categoryId || 'pancakes'))} · ${formatPrice(item.price || 190)}</span>
         <p>${escapeHTML(item.description || 'Тонкий румяный блин со сливочным маслом и горным медом.')}</p>
-        ${statusBadge(true)}
+        ${statusBadge(item.available !== false)}
       </div>
     </article>
   `;
@@ -324,7 +295,9 @@ function previewCard(item) {
 
 function itemImage(item, className) {
   const url = dishImage(item);
-  return `<div class="${className}" style="${url ? `background-image: url('${escapeAttr(url)}')` : ''}">${url ? '' : escapeHTML(item.name || 'Ч').slice(0, 1)}</div>`;
+  const fallback = localDishImages[item.id];
+  const background = url ? `background-image: url('${escapeAttr(url)}')${fallback && fallback !== url ? `, url('${escapeAttr(fallback)}')` : ''}` : '';
+  return `<div class="${className}" style="${background}">${url ? '' : escapeHTML(item.name || 'Ч').slice(0, 1)}</div>`;
 }
 
 function previewStyle(item) {

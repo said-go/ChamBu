@@ -2,6 +2,7 @@ import { ApiClient } from './api/client.js';
 import { createStore } from './state/store.js';
 import { renderAdmin } from './views/admin.js';
 import { renderMenu } from './views/menu.js';
+import { bindAdminActionMenus, closeAdminMenu, confirmDeletion } from './views/admin-actions.js';
 
 const api = new ApiClient('/api');
 const store = createStore({
@@ -13,10 +14,18 @@ const app = document.querySelector('#app');
 let adminDraftFile = null;
 
 function render() {
+  closeAdminMenu();
+  const focusedSearch = document.activeElement?.matches('[data-search]');
+  const searchPosition = focusedSearch ? document.activeElement.selectionStart : null;
   const route = window.location.hash.startsWith('#admin') ? 'admin' : 'menu';
   app.innerHTML = route === 'admin' ? renderAdmin(store.snapshot()) : renderMenu(store.snapshot());
   bindSharedEvents();
   route === 'admin' ? bindAdminEvents() : bindMenuEvents();
+  if (focusedSearch) {
+    const search = document.querySelector('[data-search]');
+    search?.focus();
+    if (searchPosition !== null) search?.setSelectionRange(searchPosition, searchPosition);
+  }
 }
 
 function bindSharedEvents() {
@@ -66,6 +75,7 @@ function bindMenuEvents() {
 }
 
 function bindAdminEvents() {
+  bindAdminActionMenus();
   document.querySelector('[data-login-form]')?.addEventListener('submit', async (event) => {
     event.preventDefault();
     await store.login(Object.fromEntries(new FormData(event.currentTarget)));
@@ -145,18 +155,23 @@ function bindAdminEvents() {
     if (adminDraftFile) formData.set('imageFile', adminDraftFile);
 
     prepareMenuItemForm(formData);
+    persistSubmitDraft(formData);
     submitButton.disabled = true;
-    await store.saveItem(formData);
+    if (!await store.saveItem(formData)) return;
     sessionStorage.removeItem('chambu.adminDraft');
     adminDraftFile = null;
-    event.currentTarget.reset();
     window.location.hash = 'admin';
   });
 
   document.querySelectorAll('[data-new-item]').forEach((button) => {
     button.addEventListener('click', () => {
       sessionStorage.removeItem('chambu.adminDraft');
+      adminDraftFile = null;
     });
+  });
+
+  document.querySelector('[data-item-form] [data-route="admin/new"]')?.addEventListener('click', () => {
+    persistSubmitDraft(mergeAdminDraft(new FormData(document.querySelector('[data-item-form]'))));
   });
 
   document.querySelector('[data-search]')?.addEventListener('input', (event) => {
@@ -189,11 +204,10 @@ function bindAdminEvents() {
   document.querySelector('[data-delete-selected]')?.addEventListener('click', async () => {
     const ids = [...store.snapshot().adminSelected];
     if (!ids.length) return;
-    if (!window.confirm(`Удалить выбранные позиции (${ids.length})? Это действие нельзя отменить.`)) return;
+    if (!await confirmDeletion(ids.length)) return;
     for (const id of ids) {
       await store.deleteItem(id);
     }
-    store.clearAdminSelection();
   });
 
   document.querySelectorAll('[data-toggle-item]').forEach((input) => {
@@ -207,16 +221,16 @@ function bindAdminEvents() {
   document.querySelectorAll('[data-edit-item]').forEach((button) => {
     button.addEventListener('click', () => {
       const item = store.snapshot().catalog.items.find((entry) => entry.id === button.dataset.editItem);
+      if (!item) return;
+      adminDraftFile = null;
       if (item) sessionStorage.setItem('chambu.adminDraft', JSON.stringify(item));
       window.location.hash = 'admin/new';
     });
   });
 
   document.querySelectorAll('[data-delete-item]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const item = store.snapshot().catalog.items.find((entry) => entry.id === button.dataset.deleteItem);
-      const name = item?.name || 'позицию';
-      if (window.confirm(`Удалить ${name}? Это действие нельзя отменить.`)) {
+    button.addEventListener('click', async () => {
+      if (await confirmDeletion()) {
         store.deleteItem(button.dataset.deleteItem);
       }
     });
@@ -229,7 +243,17 @@ window.addEventListener('beforeunload', (event) => {
   event.returnValue = '';
 });
 
-window.addEventListener('hashchange', render);
+window.addEventListener('hashchange', () => {
+  if (window.location.hash === '#admin/items' || window.location.hash === '#admin/showcase') {
+    window.location.replace('#admin');
+    return;
+  }
+  if (!window.location.hash.startsWith('#admin/new')) {
+    sessionStorage.removeItem('chambu.adminDraft');
+    adminDraftFile = null;
+  }
+  render();
+});
 window.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') store.closeItem();
 });
@@ -250,16 +274,18 @@ function prepareMenuItemForm(formData) {
 }
 
 function saveAdminDraft(formData) {
+  const previous = JSON.parse(sessionStorage.getItem('chambu.adminDraft') || '{}');
   const draft = {
-    id: String(formData.get('id') || ''),
+    ...previous,
+    id: String(previous.id || formData.get('id') || ''),
     categoryId: String(formData.get('categoryId') || ''),
     name: String(formData.get('name') || ''),
     description: String(formData.get('description') || ''),
     price: Number(formData.get('price') || 0),
-    weight: String(formData.get('weight') || ''),
-    badges: parseBadges(String(formData.get('badges') || '')),
-    image: String(formData.get('image') || ''),
-    imagePreview: String(formData.get('imagePreview') || ''),
+    weight: String(previous.weight || ''),
+    badges: previous.badges || [],
+    image: String(previous.image || ''),
+    imagePreview: String(formData.get('imagePreview') || previous.imagePreview || ''),
     available: formData.get('available') !== 'false',
   };
   sessionStorage.setItem('chambu.adminDraft', JSON.stringify(draft));
@@ -278,9 +304,20 @@ function mergeAdminDraft(details) {
     if (key !== 'imagePreview') formData.set(key, Array.isArray(value) ? value.join(', ') : value);
   }
   for (const [key, value] of details.entries()) {
-    if (value !== '') formData.set(key, value);
+    formData.set(key, value);
   }
   return formData;
+}
+
+function persistSubmitDraft(formData) {
+  const previous = JSON.parse(sessionStorage.getItem('chambu.adminDraft') || '{}');
+  const draft = { ...previous };
+  for (const [key, value] of formData.entries()) {
+    if (typeof value === 'string') draft[key] = value;
+  }
+  draft.badges = parseBadges(String(formData.get('badges') || ''));
+  draft.available = formData.get('available') !== 'false';
+  sessionStorage.setItem('chambu.adminDraft', JSON.stringify(draft));
 }
 
 function validateMenuMain(formData) {

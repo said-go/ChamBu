@@ -17,6 +17,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func main() {
@@ -129,20 +130,10 @@ func seed(db *gorm.DB) {
 		menuSeed("berry-lemonade", "drinks", "Ягодный лимонад", "Смородина, мята, цитрус и много льда.", 280, "400 мл", []string{"холодный"}, "lemonade", "", 30),
 	}
 	for _, item := range items {
-		var existing models.MenuItem
-		db.Unscoped().Where("slug = ?", item.Slug).FirstOrCreate(&existing, item)
-		existing.DeletedAt = gorm.DeletedAt{}
-		existing.CategoryID = item.CategoryID
-		existing.Name = item.Name
-		existing.Description = item.Description
-		existing.Price = item.Price
-		existing.Weight = item.Weight
-		existing.Badges = item.Badges
-		existing.Image = item.Image
-		existing.ImageURL = item.ImageURL
-		existing.Available = item.Available
-		existing.SortOrder = item.SortOrder
-		db.Save(&existing)
+		// Existing and soft-deleted dishes belong to the administrator, not the seed.
+		if err := db.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "slug"}}, DoNothing: true}).Create(&item).Error; err != nil {
+			log.Fatalf("seed menu: %v", err)
+		}
 	}
 
 	var adminCount int64

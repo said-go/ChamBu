@@ -127,10 +127,11 @@ export function createStore({ api, onChange }) {
     },
 
     async saveItem(item) {
+      if (state.saving) return false;
       if (isStaticPreview) {
         state.notice = 'На GitHub Pages нельзя сохранять меню. Запустите Go-сервер для админки.';
         emit();
-        return;
+        return false;
       }
 
       try {
@@ -142,8 +143,10 @@ export function createStore({ api, onChange }) {
         state.notice = 'Позиция сохранена.';
         await refresh();
         state.adminSelected.delete(item?.get?.('id') || item?.id || '');
+        return true;
       } catch (error) {
         state.notice = error.message;
+        return false;
       } finally {
         state.saving = false;
         emit();
@@ -163,6 +166,7 @@ export function createStore({ api, onChange }) {
         emit();
 
         await api.deleteItem(state.adminToken, id);
+        state.adminSelected.delete(id);
         state.notice = 'Позиция удалена.';
         await refresh();
       } catch (error) {

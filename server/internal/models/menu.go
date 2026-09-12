@@ -37,7 +37,7 @@ type MenuItem struct {
 	Badges      datatypes.JSON `json:"badges" gorm:"type:jsonb;default:'[]'"`
 	Image       string         `json:"image"`
 	ImageURL    string         `json:"imageUrl"`
-	Available   bool           `json:"available" gorm:"default:true"`
+	Available   bool           `json:"available"`
 	SortOrder   int            `json:"sort_order" gorm:"default:100"`
 }
 

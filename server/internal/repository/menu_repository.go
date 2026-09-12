@@ -138,7 +138,6 @@ func (r *menuRepository) UpsertItem(item *models.MenuItem) error {
 		existing.ImageURL = item.ImageURL
 	}
 	existing.Available = item.Available
-	existing.SortOrder = item.SortOrder
 	return r.db.Save(&existing).Error
 }
 
