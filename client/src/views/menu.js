@@ -148,6 +148,7 @@ function itemCard(item, cart) {
 }
 
 function selectedItemModal(state) {
+  if (!state.selectedItemId) return '';
   const item = state.catalog.items.find((entry) => entry.id === state.selectedItemId);
   if (!item) return '';
 

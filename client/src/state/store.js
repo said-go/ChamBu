@@ -85,6 +85,7 @@ export function createStore({ api, onChange }) {
     },
 
     openItem(id) {
+      if (!id || !state.catalog.items.some((item) => item.id === id)) return;
       state.selectedItemId = id;
       emit();
     },
@@ -182,6 +183,9 @@ function normalizeCatalog(catalog) {
       highlights: Array.isArray(catalog?.brand?.highlights) ? catalog.brand.highlights : fallbackCatalog.brand.highlights,
     },
     categories: Array.isArray(catalog?.categories) ? catalog.categories : [],
-    items: Array.isArray(catalog?.items) ? catalog.items : [],
+    items: Array.isArray(catalog?.items) ? catalog.items.filter((item) => (
+      typeof item?.id === 'string' && item.id.trim() &&
+      typeof item?.name === 'string' && item.name.trim()
+    )) : [],
   };
 }
