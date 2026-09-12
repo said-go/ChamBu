@@ -33,7 +33,7 @@ function adminView() {
 
 function renderOverview(state) {
   const availableCount = state.catalog.items.filter((item) => item.available).length;
-  const filtered = filteredItems(state).slice(0, 4);
+  const filtered = filteredItems(state);
 
   return `
     <section class="admin-phone">
